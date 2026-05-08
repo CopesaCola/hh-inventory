@@ -10,3 +10,4 @@ obj/
 appsettings.Production.json
 .idea/
 publish/
+.claude
