@@ -6,64 +6,68 @@
 
 <h1>Devices</h1>
 
+@{
+    var filtersActive = Model.SiteId.HasValue || Model.DeviceTypeId.HasValue || Model.StatusId.HasValue || Model.IncludeRemoved;
+}
 <form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
-    <div class="row-2">
-        <div>
-            <label>Search</label>
+    <div class="search-row">
+        <div class="entity-suggest" data-search-scope="devices">
             <input type="text" name="q" value="@Model.Query" placeholder="Serial, asset tag, model, user..." autocomplete="off" />
         </div>
-        <div>
-            <label>Site</label>
-            <select name="SiteId">
-                <option value="">(any)</option>
-                @foreach (var s in Model.Sites)
-                {
-                    <option value="@s.Id" selected="@(Model.SiteId == s.Id)">@s.Name</option>
-                }
-            </select>
-        </div>
-        <div>
-            <label>Type</label>
-            <select name="DeviceTypeId">
-                <option value="">(any)</option>
-                @foreach (var t in Model.DeviceTypes)
-                {
-                    <option value="@t.Id" selected="@(Model.DeviceTypeId == t.Id)">@t.Name</option>
-                }
-            </select>
-        </div>
-        <div>
-            <label>Status</label>
-            <select name="StatusId">
-                <option value="">(any)</option>
-                @foreach (var s in Model.Statuses)
-                {
-                    <option value="@s.Id" selected="@(Model.StatusId == s.Id)">@s.Name</option>
-                }
-            </select>
-        </div>
+        <button type="submit">Search</button>
+        <button type="button" class="button secondary" data-toggle-filters="devicesFilters" aria-expanded="false">Filters</button>
+        <a class="button secondary" asp-page="Index">Reset</a>
+        <span class="muted">@Model.TotalMatching matching</span>
     </div>
-    <div style="margin-top:0.6rem; display:flex; gap:0.6rem; align-items:center;">
-        <label style="display:inline-flex; align-items:center; gap:0.3rem; margin:0;">
+
+    <div class="filters-panel" id="devicesFilters" data-active="@(filtersActive ? "true" : "false")" hidden>
+        <div class="row-3">
+            <div>
+                <label>Site</label>
+                <select name="SiteId">
+                    <option value="">(any)</option>
+                    @foreach (var s in Model.Sites)
+                    {
+                        <option value="@s.Id" selected="@(Model.SiteId == s.Id)">@s.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label>Type</label>
+                <select name="DeviceTypeId">
+                    <option value="">(any)</option>
+                    @foreach (var t in Model.DeviceTypes)
+                    {
+                        <option value="@t.Id" selected="@(Model.DeviceTypeId == t.Id)">@t.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label>Status</label>
+                <select name="StatusId">
+                    <option value="">(any)</option>
+                    @foreach (var s in Model.Statuses)
+                    {
+                        <option value="@s.Id" selected="@(Model.StatusId == s.Id)">@s.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <label style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.8rem;">
             <input type="checkbox" name="IncludeRemoved" value="true" @(Model.IncludeRemoved ? "checked" : "") /> Show removed
         </label>
-        <button type="submit">Apply filters</button>
-        <a class="button secondary" asp-page="Index">Reset</a>
-        <a class="button secondary"
-           asp-page="Index" asp-page-handler="Export"
-           asp-route-q="@Model.Query"
-           asp-route-SiteId="@Model.SiteId"
-           asp-route-DeviceTypeId="@Model.DeviceTypeId"
-           asp-route-StatusId="@Model.StatusId"
-           asp-route-IncludeRemoved="@Model.IncludeRemoved">Export CSV</a>
-        <span class="muted" style="margin-left:auto;">@Model.TotalMatching matching</span>
     </div>
 </form>
 
 <div class="toolbar">
     <a class="button" asp-page="Create">+ Add Device</a>
-    <a class="button secondary" asp-page="/Import/Index">Bulk Import</a>
-    <a class="button secondary" asp-page="/Import/HopeHealth">HH Workbook Import</a>
+    <a class="button secondary" style="margin-left:auto;"
+       asp-page="Index" asp-page-handler="Export"
+       asp-route-q="@Model.Query"
+       asp-route-SiteId="@Model.SiteId"
+       asp-route-DeviceTypeId="@Model.DeviceTypeId"
+       asp-route-StatusId="@Model.StatusId"
+       asp-route-IncludeRemoved="@Model.IncludeRemoved">Export CSV</a>
 </div>
 
 @if (Model.Devices.Count == 0)

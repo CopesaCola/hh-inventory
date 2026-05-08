@@ -6,12 +6,21 @@
 
 <h1>User Profiles</h1>
 
+@{
+    var filtersActive = Model.SiteId.HasValue;
+}
 <form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
-    <div class="row-2">
-        <div>
-            <label>Search</label>
+    <div class="search-row">
+        <div class="entity-suggest" data-search-scope="users">
             <input type="text" name="q" value="@Model.Query" placeholder="Name, username, email, department..." autocomplete="off" />
         </div>
+        <button type="submit">Search</button>
+        <button type="button" class="button secondary" data-toggle-filters="usersFilters" aria-expanded="false">Filters</button>
+        <a class="button secondary" asp-page="Index">Reset</a>
+        <span class="muted">@Model.Users.Count user(s)</span>
+    </div>
+
+    <div class="filters-panel" id="usersFilters" data-active="@(filtersActive ? "true" : "false")" hidden>
         <div>
             <label>Site</label>
             <select name="SiteId">
@@ -23,19 +32,14 @@
             </select>
         </div>
     </div>
-    <div style="margin-top:0.6rem; display:flex; gap:0.6rem;">
-        <button type="submit">Apply</button>
-        <a class="button secondary" asp-page="Index">Reset</a>
-        <a class="button secondary"
-           asp-page="Index" asp-page-handler="Export"
-           asp-route-q="@Model.Query"
-           asp-route-SiteId="@Model.SiteId">Export CSV</a>
-        <span class="muted" style="margin-left:auto;">@Model.Users.Count user(s)</span>
-    </div>
 </form>
 
 <div class="toolbar">
     <a class="button" asp-page="Create">+ Add User</a>
+    <a class="button secondary" style="margin-left:auto;"
+       asp-page="Index" asp-page-handler="Export"
+       asp-route-q="@Model.Query"
+       asp-route-SiteId="@Model.SiteId">Export CSV</a>
 </div>
 
 @if (Model.Users.Count == 0)

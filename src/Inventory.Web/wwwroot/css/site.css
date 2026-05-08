@@ -68,6 +68,28 @@ tr[data-href]:hover td { background: #eef4ff; }
     border-top: 1px solid #eef0f3; background: #f9fafb;
 }
 .suggest-all:hover { background: #eef4ff; }
+
+/* Entity-scoped search suggestions on Devices/Users/Sites index pages.
+   Anchors to the wrapper div, sized to the input width, opens left-aligned. */
+.entity-suggest { position: relative; }
+.entity-suggest-dropdown {
+    display: none; position: absolute; left: 0; right: 0; top: calc(100% + 2px);
+    background: #fff; color: #222;
+    border-radius: 6px; box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+    z-index: 40; max-height: 420px; overflow-y: auto;
+}
+.entity-suggest-dropdown.open { display: block; }
+
+/* Single-line search bar with action buttons on entity index pages.
+   The .entity-suggest wrapper grows to fill remaining space. */
+.search-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.search-row > .entity-suggest { flex: 1 1 240px; min-width: 200px; }
+.search-row > .muted { margin-left: auto; }
+
+/* Collapsible filter panel toggled by the Filters button. */
+.filters-panel { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #eef0f3; }
+button.active, .button.active { background: #1d4ed8; box-shadow: inset 0 0 0 2px #1e3a8a; }
+
 form.card, .card { background: #fff; padding: 1.2rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1rem; }
 label { display: block; font-size: 0.85rem; font-weight: 600; margin-top: 0.6rem; }
 input[type=text], input[type=email], input[type=number], input[type=file], select, textarea {
@@ -92,4 +114,5 @@ button:hover, .button:hover { opacity: 0.9; }
 .badge.repair { background: #fde68a; color: #78350f; }
 .badge.lost { background: #fecaca; color: #7f1d1d; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-@media (max-width: 700px) { .row-2 { grid-template-columns: 1fr; } }
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 700px) { .row-2, .row-3 { grid-template-columns: 1fr; } }

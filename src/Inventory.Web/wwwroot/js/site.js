@@ -132,82 +132,134 @@ console.log('[inventory] site.js loaded');
     boxes.forEach(setupCombobox);
 })();
 
-// Global search suggestions in the top-bar input.
+// Search suggestions: powers the top-bar global search AND the search inputs on
+// Devices/Users/Sites index pages. Same API (/api/search/suggest), same UI; each
+// caller passes a `scope` so each page suggests only the entity type that fits.
 (function () {
     const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const form = document.querySelector('.global-search');
-    if (!form) { console.warn('[global-suggest] no .global-search form found'); return; }
-    const input = form.querySelector('input[name="q"]');
-    if (!input) { console.warn('[global-suggest] no input[name="q"] in form'); return; }
-    console.log('[global-suggest] wired');
+    function wireSuggest(container, opts) {
+        const input = container.querySelector('input[name="q"]');
+        if (!input) { console.warn('[suggest] no input[name="q"] in container', container); return; }
+        const scope = opts.scope || 'all';                            // 'all' | 'devices' | 'users' | 'sites'
+        const showSeeAll = !!opts.showSeeAll;
+        const dropdownClass = opts.dropdownClass || 'entity-suggest-dropdown';
+        const minLen = opts.minLen ?? 2;
 
-    const dropdown = document.createElement('div');
-    dropdown.className = 'global-suggest';
-    form.appendChild(dropdown);
+        const dropdown = document.createElement('div');
+        dropdown.className = dropdownClass;
+        container.appendChild(dropdown);
 
-    let timer = null;
+        let timer = null;
 
-    function section(title, items, hrefFn) {
-        if (!items || items.length === 0) return '';
-        const rows = items.map(it =>
-            `<a class="suggest-item" href="${hrefFn(it)}">
-               <span>${escapeHtml(it.name)}</span>
-               ${it.subtitle ? `<span class="muted">${escapeHtml(it.subtitle)}</span>` : ''}
-             </a>`).join('');
-        return `<div class="suggest-section">
-                  <div class="suggest-section-title">${title}</div>${rows}
-                </div>`;
-    }
-
-    function render(data, q) {
-        const total = (data.devices?.length || 0) + (data.users?.length || 0) + (data.sites?.length || 0);
-        if (total === 0) {
-            dropdown.innerHTML = `<div class="suggest-empty">No matches for "${escapeHtml(q)}"</div>`;
-        } else {
-            const html =
-                section('Devices', data.devices, it => `/Devices/Details/${it.id}`) +
-                section('Users', data.users, it => `/Users/Details/${it.id}`) +
-                section('Sites', data.sites, it => `/Sites/Details/${it.id}`);
-            dropdown.innerHTML = html +
-                `<a class="suggest-all" href="/Search?q=${encodeURIComponent(q)}">See all results &rarr;</a>`;
+        function section(title, items, hrefFn) {
+            if (!items || items.length === 0) return '';
+            const rows = items.map(it =>
+                `<a class="suggest-item" href="${hrefFn(it)}">
+                   <span>${escapeHtml(it.name)}</span>
+                   ${it.subtitle ? `<span class="muted">${escapeHtml(it.subtitle)}</span>` : ''}
+                 </a>`).join('');
+            return `<div class="suggest-section">
+                      <div class="suggest-section-title">${title}</div>${rows}
+                    </div>`;
         }
-        dropdown.classList.add('open');
-    }
 
-    async function fetchSuggest(q) {
-        if (!q || q.trim().length < 2) {
-            dropdown.classList.remove('open');
-            dropdown.innerHTML = '';
-            return;
-        }
-        const fullUrl = `/api/search/suggest?q=${encodeURIComponent(q.trim())}`;
-        try {
-            const r = await fetch(fullUrl, { credentials: 'same-origin' });
-            if (!r.ok) {
-                console.error('[global-suggest] fetch failed', r.status, r.statusText, fullUrl);
-                return;
+        function render(data, q) {
+            const includeD = scope === 'all' || scope === 'devices';
+            const includeU = scope === 'all' || scope === 'users';
+            const includeS = scope === 'all' || scope === 'sites';
+            const total =
+                (includeD ? (data.devices?.length || 0) : 0) +
+                (includeU ? (data.users?.length   || 0) : 0) +
+                (includeS ? (data.sites?.length   || 0) : 0);
+
+            if (total === 0) {
+                dropdown.innerHTML = `<div class="suggest-empty">No matches for "${escapeHtml(q)}"</div>`;
+            } else {
+                let html = '';
+                if (includeD) html += section('Devices', data.devices, it => `/Devices/Details/${it.id}`);
+                if (includeU) html += section('Users',   data.users,   it => `/Users/Details/${it.id}`);
+                if (includeS) html += section('Sites',   data.sites,   it => `/Sites/Details/${it.id}`);
+                if (showSeeAll) {
+                    html += `<a class="suggest-all" href="/Search?q=${encodeURIComponent(q)}">See all results &rarr;</a>`;
+                }
+                dropdown.innerHTML = html;
             }
-            const data = await r.json();
-            render(data, q.trim());
-        } catch (e) {
-            console.error('[global-suggest] error', e);
-        }
-    }
-
-    input.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fetchSuggest(input.value), 200);
-    });
-
-    input.addEventListener('focus', () => {
-        if (input.value.trim().length >= 2 && dropdown.innerHTML) {
             dropdown.classList.add('open');
         }
-    });
 
-    document.addEventListener('mousedown', (e) => {
-        if (!form.contains(e.target)) dropdown.classList.remove('open');
+        async function fetchSuggest(q) {
+            if (!q || q.trim().length < minLen) {
+                dropdown.classList.remove('open');
+                dropdown.innerHTML = '';
+                return;
+            }
+            const fullUrl = `/api/search/suggest?q=${encodeURIComponent(q.trim())}`;
+            try {
+                const r = await fetch(fullUrl, { credentials: 'same-origin' });
+                if (!r.ok) {
+                    console.error('[suggest] fetch failed', r.status, r.statusText, fullUrl);
+                    return;
+                }
+                render(await r.json(), q.trim());
+            } catch (e) {
+                console.error('[suggest] error', e);
+            }
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fetchSuggest(input.value), 200);
+        });
+
+        input.addEventListener('focus', () => {
+            if (input.value.trim().length >= minLen && dropdown.innerHTML) {
+                dropdown.classList.add('open');
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            if (!container.contains(e.target)) dropdown.classList.remove('open');
+        });
+    }
+
+    // Top-bar global search (all entity types, with "See all results" footer).
+    const globalForm = document.querySelector('.global-search');
+    if (globalForm) {
+        wireSuggest(globalForm, { scope: 'all', showSeeAll: true, dropdownClass: 'global-suggest' });
+        console.log('[suggest] global wired');
+    } else {
+        console.warn('[suggest] no .global-search form found');
+    }
+
+    // Entity index pages: <div class="entity-suggest" data-search-scope="devices|users|sites">.
+    const entityBoxes = document.querySelectorAll('.entity-suggest[data-search-scope]');
+    entityBoxes.forEach(c => {
+        wireSuggest(c, {
+            scope: c.dataset.searchScope,
+            showSeeAll: false,
+            dropdownClass: 'entity-suggest-dropdown'
+        });
+    });
+    console.log(`[suggest] ${entityBoxes.length} entity-scoped input(s) wired`);
+})();
+
+// Filters panel toggle on entity index pages.
+// A button with [data-toggle-filters="<panelId>"] toggles the matching panel's
+// hidden state. If the panel has data-active="true" (server marked any filter
+// already applied in the URL), it starts expanded so the user sees the active
+// filter without an extra click.
+(function () {
+    document.querySelectorAll('[data-toggle-filters]').forEach(btn => {
+        const panel = document.getElementById(btn.getAttribute('data-toggle-filters'));
+        if (!panel) return;
+        const setOpen = open => {
+            panel.hidden = !open;
+            btn.setAttribute('aria-expanded', String(open));
+            btn.classList.toggle('active', open);
+        };
+        if (panel.dataset.active === 'true') setOpen(true);
+        btn.addEventListener('click', () => setOpen(panel.hidden));
     });
 })();
