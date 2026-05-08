@@ -1,0 +1,40 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Inventory</h1>
+<div class="card">
+    <p class="muted">Quick stats</p>
+    <div style="display:flex; gap:2rem; flex-wrap:wrap;">
+        <div><strong>@Model.DeviceCount</strong><div class="muted">Devices</div></div>
+        <div><strong>@Model.UserCount</strong><div class="muted">User Profiles</div></div>
+        <div><strong>@Model.SiteCount</strong><div class="muted">Sites</div></div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Recent activity</h3>
+    @if (Model.Recent.Count == 0)
+    {
+        <p class="muted">No activity yet.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>When</th><th>Device</th><th>Action</th><th>By</th></tr></thead>
+            <tbody>
+            @foreach (var a in Model.Recent)
+            {
+                <tr data-href="@(a.Device is not null ? Url.Page("/Devices/Details", new { id = a.DeviceId }) : null)">
+                    <td>@a.TimestampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@(a.Device?.SerialNumber ?? "(deleted)")</td>
+                    <td>@a.Action</td>
+                    <td>@a.ModifiedBy</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

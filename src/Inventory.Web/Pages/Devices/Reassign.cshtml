@@ -1,0 +1,56 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Devices.ReassignModel
+@{
+    ViewData["Title"] = "Reassign Device";
+}
+
+@if (Model.Device is null)
+{
+    <p>Device not found.</p>
+}
+else
+{
+    <h1>Reassign device</h1>
+    <div class="card">
+        <p class="muted">
+            @Model.Device.DeviceType — @Model.Device.Model
+            @if (!string.IsNullOrEmpty(Model.Device.SerialNumber)) { <text>(SN: @Model.Device.SerialNumber)</text> }
+            @if (!string.IsNullOrEmpty(Model.Device.AssetTag)) { <text>(Tag: @Model.Device.AssetTag)</text> }
+        </p>
+        <p class="muted">
+            Currently:
+            @if (Model.Device.AssignedUser is not null) { <text><strong>@Model.Device.AssignedUser.FullName</strong></text> } else { <text>unassigned</text> }
+            at
+            @if (Model.Device.Site is not null) { <text><strong>@Model.Device.Site.Name</strong></text> } else { <text>no site</text> }.
+        </p>
+    </div>
+
+    <form method="post" class="card">
+        <input type="hidden" asp-for="DeviceId" />
+        <input type="hidden" asp-for="ReturnUserId" />
+        <input type="hidden" asp-for="ReturnSiteId" />
+
+        <label>Assigned User</label>
+        <div class="combobox" data-search-url="/api/users/search">
+            <input type="text" class="combobox-input" autocomplete="off"
+                   value="@Model.AssignedUserName" placeholder="Type to search users..." />
+            <input type="hidden" asp-for="AssignedUserId" class="combobox-id" />
+            <span class="combobox-clear" title="Clear">&times;</span>
+            <div class="combobox-results"></div>
+        </div>
+
+        <label>Site</label>
+        <select asp-for="SiteId">
+            <option value="">(no site)</option>
+            @foreach (var s in Model.Sites)
+            {
+                <option value="@s.Id">@s.Name</option>
+            }
+        </select>
+
+        <div class="actions">
+            <button type="submit">Save</button>
+            <a class="button secondary" asp-page="Details" asp-route-id="@Model.Device.Id">Cancel</a>
+        </div>
+    </form>
+}

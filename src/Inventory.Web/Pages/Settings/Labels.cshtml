@@ -1,0 +1,34 @@
+@page
+@model Inventory.Web.Pages.Settings.LabelsModel
+@{
+    ViewData["Title"] = "Settings — Field Labels";
+}
+
+<h1>Field Labels</h1>
+<p><a asp-page="Index">&larr; Back to Settings</a></p>
+<p class="muted">Override the labels shown for built-in fields. Leave blank to use the default. Changes apply immediately on save.</p>
+
+@if (TempData["Error"] is string err) { <div class="error">@err</div> }
+
+<form method="post" class="card">
+    @foreach (var (entityType, fields) in Inventory.Web.Services.OverridableLabels.Catalog)
+    {
+        <h3>@entityType</h3>
+        <table>
+            <thead><tr><th>Field</th><th>Default Label</th><th>Custom Label</th></tr></thead>
+            <tbody>
+            @foreach (var (key, def) in fields)
+            {
+                var inputName = $"Overrides[{(int)entityType}_{key}]";
+                var current = Model.Current.GetValueOrDefault((entityType, key));
+                <tr>
+                    <td><code>@key</code></td>
+                    <td>@def</td>
+                    <td><input type="text" name="@inputName" value="@current" placeholder="@def" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    <div class="actions"><button type="submit">Save all</button></div>
+</form>

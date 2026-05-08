@@ -1,0 +1,120 @@
+@page
+@model Inventory.Web.Pages.Devices.IndexModel
+@{
+    ViewData["Title"] = "Devices";
+}
+
+<h1>Devices</h1>
+
+<form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
+    <div class="row-2">
+        <div>
+            <label>Search</label>
+            <input type="text" name="q" value="@Model.Query" placeholder="Serial, asset tag, model, user..." autocomplete="off" />
+        </div>
+        <div>
+            <label>Site</label>
+            <select name="SiteId">
+                <option value="">(any)</option>
+                @foreach (var s in Model.Sites)
+                {
+                    <option value="@s.Id" selected="@(Model.SiteId == s.Id)">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Type</label>
+            <select name="DeviceTypeId">
+                <option value="">(any)</option>
+                @foreach (var t in Model.DeviceTypes)
+                {
+                    <option value="@t.Id" selected="@(Model.DeviceTypeId == t.Id)">@t.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Status</label>
+            <select name="StatusId">
+                <option value="">(any)</option>
+                @foreach (var s in Model.Statuses)
+                {
+                    <option value="@s.Id" selected="@(Model.StatusId == s.Id)">@s.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div style="margin-top:0.6rem; display:flex; gap:0.6rem; align-items:center;">
+        <label style="display:inline-flex; align-items:center; gap:0.3rem; margin:0;">
+            <input type="checkbox" name="IncludeRemoved" value="true" @(Model.IncludeRemoved ? "checked" : "") /> Show removed
+        </label>
+        <button type="submit">Apply filters</button>
+        <a class="button secondary" asp-page="Index">Reset</a>
+        <a class="button secondary"
+           asp-page="Index" asp-page-handler="Export"
+           asp-route-q="@Model.Query"
+           asp-route-SiteId="@Model.SiteId"
+           asp-route-DeviceTypeId="@Model.DeviceTypeId"
+           asp-route-StatusId="@Model.StatusId"
+           asp-route-IncludeRemoved="@Model.IncludeRemoved">Export CSV</a>
+        <span class="muted" style="margin-left:auto;">@Model.TotalMatching matching</span>
+    </div>
+</form>
+
+<div class="toolbar">
+    <a class="button" asp-page="Create">+ Add Device</a>
+    <a class="button secondary" asp-page="/Import/Index">Bulk Import</a>
+    <a class="button secondary" asp-page="/Import/HopeHealth">HH Workbook Import</a>
+</div>
+
+@if (Model.Devices.Count == 0)
+{
+    <p class="muted">No devices match the current filters.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th><th>Model</th><th>Serial</th><th>Asset Tag</th>
+                <th>Assigned To</th><th>Site</th><th>Status</th><th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Devices)
+            {
+                <tr data-href="@Url.Page("Details", new { id = d.Id })">
+                    <td>@(d.DeviceType?.Name ?? "-")</td>
+                    <td>@d.Model</td>
+                    <td>@d.SerialNumber</td>
+                    <td>@d.AssetTag</td>
+                    <td>
+                        @if (d.AssignedUser is not null)
+                        {
+                            <a asp-page="/Users/Details" asp-route-id="@d.AssignedUserId">@d.AssignedUser.FullName</a>
+                        }
+                        else { <text>-</text> }
+                    </td>
+                    <td>
+                        @if (d.Site is not null)
+                        {
+                            <a asp-page="/Sites/Details" asp-route-id="@d.SiteId">@d.Site.Name</a>
+                        }
+                        else { <text>-</text> }
+                    </td>
+                    <td>
+                        <span class="@(d.Status?.BadgeClass ?? "badge")">@(d.Status?.Name ?? "-")</span>
+                        @if (d.RemovedFromInventory) { <span class="badge retired">Removed</span> }
+                    </td>
+                    <td>
+                        @d.LastModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")<br />
+                        <span class="muted">@d.LastModifiedBy</span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (Model.TotalMatching > Model.Devices.Count)
+    {
+        <p class="muted">Showing first @Model.Devices.Count of @Model.TotalMatching. Refine filters to narrow.</p>
+    }
+}

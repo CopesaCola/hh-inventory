@@ -1,0 +1,94 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Devices.EditModel
+@inject Inventory.Web.Services.ILabelService L
+@{
+    ViewData["Title"] = "Edit Device";
+    var E = Inventory.Web.Models.CustomFieldEntityType.Device;
+}
+
+<h1>Edit Device</h1>
+
+<form method="post" class="card">
+    <input type="hidden" asp-for="Input.Id" />
+    <div asp-validation-summary="All" class="error"></div>
+    <div class="row-2">
+        <div>
+            <label>@L.Get(E, "DeviceType", "Device Type")</label>
+            <select asp-for="Input.DeviceTypeId">
+                <option value="">(none)</option>
+                @foreach (var t in Model.DeviceTypes)
+                {
+                    <option value="@t.Id">@t.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>@L.Get(E, "Model", "Model")</label>
+            <input type="text" asp-for="Input.Model" />
+        </div>
+        <div>
+            <label>@L.Get(E, "SerialNumber", "Serial Number")</label>
+            <input type="text" asp-for="Input.SerialNumber" />
+        </div>
+        <div>
+            <label>@L.Get(E, "AssetTag", "Asset Tag")</label>
+            <input type="text" asp-for="Input.AssetTag" />
+        </div>
+        <div>
+            <label>@L.Get(E, "Status", "Status")</label>
+            <select asp-for="Input.StatusId">
+                @foreach (var s in Model.Statuses)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>@L.Get(E, "LocationWithinSite", "Location Within Site")</label>
+            <input type="text" asp-for="Input.LocationWithinSite" />
+        </div>
+        <div>
+            <label>@L.Get(E, "WindowsVersion", "Windows Version")</label>
+            <input type="text" asp-for="Input.WindowsVersion" />
+        </div>
+        <div>
+            <label>@L.Get(E, "IsGrantFunded", "Grant or Dept Funded")</label>
+            <select asp-for="Input.IsGrantFunded">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+            </select>
+        </div>
+        <div>
+            <label>@L.Get(E, "AssignedUser", "Assigned User")</label>
+            <div class="combobox" data-search-url="/api/users/search">
+                <input type="text" class="combobox-input" autocomplete="off"
+                       value="@Model.AssignedUserName" placeholder="Type to search users..." />
+                <input type="hidden" asp-for="Input.AssignedUserId" class="combobox-id" />
+                <span class="combobox-clear" title="Clear">&times;</span>
+                <div class="combobox-results"></div>
+            </div>
+        </div>
+        <div>
+            <label>@L.Get(E, "Site", "Site")</label>
+            <select asp-for="Input.SiteId">
+                <option value="">(none)</option>
+                @foreach (var s in Model.Sites)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label><input type="checkbox" asp-for="Input.RemovedFromInventory" /> Removed from inventory</label>
+        </div>
+    </div>
+
+    <partial name="_CustomFieldsForm" model="@((Model.CustomDefs, Model.CustomValues))" />
+
+    <div class="actions">
+        <button type="submit">Save</button>
+        <a class="button secondary" asp-page="Index">Cancel</a>
+        <button type="submit" asp-page-handler="Delete" formnovalidate class="danger"
+                onclick="return confirm('Permanently delete this device?');">Delete</button>
+    </div>
+</form>

@@ -1,0 +1,17 @@
+@page
+@model Inventory.Web.Pages.Settings.IndexModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<h1>Settings</h1>
+<div class="card">
+    <p class="muted">Manage dropdown values, custom fields, and field labels used throughout the app. All staff have access.</p>
+    <ul style="list-style:none; padding:0; line-height:2;">
+        <li><a asp-page="DeviceTypes">Device Types</a> — list shown when adding/editing devices</li>
+        <li><a asp-page="Statuses">Statuses</a> — In Use, Spare, In Repair, Retired, Lost or Stolen, plus any you add</li>
+        <li><a asp-page="Departments">Departments</a> — list shown on user profiles</li>
+        <li><a asp-page="CustomFields">Custom Fields</a> — add your own fields to Devices, Users, or Sites</li>
+        <li><a asp-page="Labels">Field Labels</a> — rename built-in field labels</li>
+    </ul>
+</div>

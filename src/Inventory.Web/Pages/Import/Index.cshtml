@@ -1,0 +1,48 @@
+@page
+@model Inventory.Web.Pages.Import.IndexModel
+@{
+    ViewData["Title"] = "Bulk Import";
+}
+
+<h1>Bulk Import Devices</h1>
+
+<div class="card">
+    <p>Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file. Required columns:
+       <code>DeviceType, Model</code> plus at least one of <code>SerialNumber</code> or <code>AssetTag</code>. Optional:
+       <code>Status, LocationWithinSite, WindowsVersion, IsGrantFunded, AssignedUser, Site</code>.</p>
+    <p class="muted">If you're importing the <strong>HH IT Inventory.xlsx</strong> workbook, use the
+        <a asp-page="HopeHealth">HH Workbook Import</a> page instead.</p>
+    <p class="muted">Devices are matched by Serial Number — existing rows are updated, new rows are inserted.
+       Sites and Users referenced by name/email/username are created automatically if not found.</p>
+    <p>
+        <a asp-page-handler="Template" class="button secondary">Download CSV Template</a>
+    </p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card">
+    <label>File</label>
+    <input type="file" name="Upload" accept=".csv,.xlsx" required />
+    <div class="actions">
+        <button type="submit">Upload &amp; Import</button>
+    </div>
+</form>
+
+@if (Model.Result is not null)
+{
+    <div class="card">
+        <h3>Result</h3>
+        <p><strong>Inserted:</strong> @Model.Result.Inserted &nbsp; <strong>Updated:</strong> @Model.Result.Updated &nbsp; <strong>Skipped:</strong> @Model.Result.Skipped</p>
+        @if (Model.Result.Errors.Count > 0)
+        {
+            <details>
+                <summary>@Model.Result.Errors.Count error(s)</summary>
+                <ul>
+                    @foreach (var e in Model.Result.Errors)
+                    {
+                        <li class="error">@e</li>
+                    }
+                </ul>
+            </details>
+        }
+    </div>
+}

@@ -1,0 +1,57 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Users.EditModel
+@inject Inventory.Web.Services.ILabelService L
+@{
+    ViewData["Title"] = "Edit User";
+    var E = Inventory.Web.Models.CustomFieldEntityType.UserProfile;
+}
+
+<h1>Edit User Profile</h1>
+
+<form method="post" class="card">
+    <input type="hidden" asp-for="Input.Id" />
+    <div asp-validation-summary="All" class="error"></div>
+    <div class="row-2">
+        <div>
+            <label>@L.Get(E, "FullName", "Full Name")</label>
+            <input type="text" asp-for="Input.FullName" />
+        </div>
+        <div>
+            <label>@L.Get(E, "Username", "Username")</label>
+            <input type="text" asp-for="Input.Username" />
+        </div>
+        <div>
+            <label>@L.Get(E, "Email", "Email")</label>
+            <input type="email" asp-for="Input.Email" />
+        </div>
+        <div>
+            <label>@L.Get(E, "Department", "Department")</label>
+            <select asp-for="Input.DepartmentId">
+                <option value="">(none)</option>
+                @foreach (var d in Model.Departments)
+                {
+                    <option value="@d.Id">@d.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>@L.Get(E, "Site", "Site")</label>
+            <select asp-for="Input.SiteId">
+                <option value="">(none)</option>
+                @foreach (var s in Model.Sites)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <partial name="_CustomFieldsForm" model="@((Model.CustomDefs, Model.CustomValues))" />
+
+    <div class="actions">
+        <button type="submit">Save</button>
+        <a class="button secondary" asp-page="Index">Cancel</a>
+        <button type="submit" asp-page-handler="Delete" formnovalidate class="danger"
+                onclick="return confirm('Delete this user profile? Devices assigned to them will be unassigned.');">Delete</button>
+    </div>
+</form>

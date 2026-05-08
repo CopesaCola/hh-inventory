@@ -1,0 +1,72 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Users.DetailsModel
+@{
+    ViewData["Title"] = Model.User?.FullName ?? "User";
+}
+
+@if (Model.User is null)
+{
+    <p>User not found.</p>
+}
+else
+{
+    <h1>@Model.User.FullName</h1>
+    <div class="card">
+        <div class="row-2">
+            <div><strong>Username:</strong> @(Model.User.Username ?? "-")</div>
+            <div><strong>Email:</strong> @(Model.User.Email ?? "-")</div>
+            <div><strong>Department:</strong> @(Model.User.Department?.Name ?? "-")</div>
+            <div>
+                <strong>Site:</strong>
+                @if (Model.User.Site is not null)
+                {
+                    <a asp-page="/Sites/Details" asp-route-id="@Model.User.SiteId">@Model.User.Site.Name</a>
+                }
+                else { <text>-</text> }
+            </div>
+        </div>
+        <div class="actions">
+            <a class="button" asp-page="Edit" asp-route-id="@Model.User.Id">Edit</a>
+            <a class="button secondary" asp-page="Index">Back to Users</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toolbar" style="margin-bottom:0.5rem;">
+            <h3 style="margin:0;">Assigned devices (@Model.User.Devices.Count)</h3>
+            <a class="button" asp-page="/Devices/Create" asp-route-userId="@Model.User.Id" asp-route-siteId="@Model.User.SiteId">+ Assign New Device</a>
+        </div>
+        @if (Model.User.Devices.Count == 0)
+        {
+            <p class="muted">No devices currently assigned to this user.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Type</th><th>Model</th><th>Serial</th><th>Asset Tag</th><th>Site</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var d in Model.User.Devices.OrderBy(d => d.DeviceType?.Name).ThenBy(d => d.Model))
+                    {
+                        <tr data-href="@Url.Page("/Devices/Details", new { id = d.Id })">
+                            <td>@(d.DeviceType?.Name ?? "-")</td>
+                            <td>@d.Model</td>
+                            <td>@d.SerialNumber</td>
+                            <td>@d.AssetTag</td>
+                            <td>
+                                @if (d.Site is not null)
+                                {
+                                    <a asp-page="/Sites/Details" asp-route-id="@d.SiteId">@d.Site.Name</a>
+                                }
+                                else { <text>-</text> }
+                            </td>
+                            <td>
+                                <span class="@(d.Status?.BadgeClass ?? "badge")">@(d.Status?.Name ?? "-")</span>
+                                @if (d.RemovedFromInventory) { <span class="badge retired">Removed</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}

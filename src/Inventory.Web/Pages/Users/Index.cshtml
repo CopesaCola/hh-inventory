@@ -1,0 +1,71 @@
+@page
+@model Inventory.Web.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "User Profiles";
+}
+
+<h1>User Profiles</h1>
+
+<form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
+    <div class="row-2">
+        <div>
+            <label>Search</label>
+            <input type="text" name="q" value="@Model.Query" placeholder="Name, username, email, department..." autocomplete="off" />
+        </div>
+        <div>
+            <label>Site</label>
+            <select name="SiteId">
+                <option value="">(any)</option>
+                @foreach (var s in Model.Sites)
+                {
+                    <option value="@s.Id" selected="@(Model.SiteId == s.Id)">@s.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div style="margin-top:0.6rem; display:flex; gap:0.6rem;">
+        <button type="submit">Apply</button>
+        <a class="button secondary" asp-page="Index">Reset</a>
+        <a class="button secondary"
+           asp-page="Index" asp-page-handler="Export"
+           asp-route-q="@Model.Query"
+           asp-route-SiteId="@Model.SiteId">Export CSV</a>
+        <span class="muted" style="margin-left:auto;">@Model.Users.Count user(s)</span>
+    </div>
+</form>
+
+<div class="toolbar">
+    <a class="button" asp-page="Create">+ Add User</a>
+</div>
+
+@if (Model.Users.Count == 0)
+{
+    <p class="muted">No user profiles match.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Full Name</th><th>Username</th><th>Email</th><th>Department</th><th>Site</th><th>Devices</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr data-href="@Url.Page("Details", new { id = u.Id })">
+                <td><a asp-page="Details" asp-route-id="@u.Id">@u.FullName</a></td>
+                <td>@u.Username</td>
+                <td>@u.Email</td>
+                <td>@(u.Department?.Name ?? "-")</td>
+                <td>
+                    @if (u.Site is not null)
+                    {
+                        <a asp-page="/Sites/Details" asp-route-id="@u.SiteId">@u.Site.Name</a>
+                    }
+                    else { <text>-</text> }
+                </td>
+                <td>@u.Devices.Count</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

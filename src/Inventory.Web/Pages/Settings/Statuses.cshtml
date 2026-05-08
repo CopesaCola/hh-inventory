@@ -1,0 +1,84 @@
+@page
+@model Inventory.Web.Pages.Settings.StatusesModel
+@{
+    ViewData["Title"] = "Settings — Statuses";
+    string[] colorOptions = { "badge", "badge spare", "badge repair", "badge retired", "badge lost" };
+    string ColorLabel(string c) => c switch
+    {
+        "badge spare" => "Yellow",
+        "badge repair" => "Orange",
+        "badge retired" => "Red",
+        "badge lost" => "Dark red",
+        _ => "Default (blue)",
+    };
+}
+
+<h1>Statuses</h1>
+<p><a asp-page="Index">&larr; Back to Settings</a></p>
+
+@if (TempData["Error"] is string err) { <div class="error">@err</div> }
+
+<form method="post" asp-page-handler="Add" class="card">
+    <h3 style="margin-top:0;">Add</h3>
+    <div class="row-2">
+        <div>
+            <label>Name</label>
+            <input type="text" asp-for="NewName" required />
+        </div>
+        <div>
+            <label>Badge color</label>
+            <select asp-for="NewBadgeClass">
+                @foreach (var c in colorOptions)
+                {
+                    <option value="@c">@ColorLabel(c)</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="actions"><button type="submit">Add</button></div>
+</form>
+
+<form method="post" class="card">
+    <table>
+        <thead><tr><th>Name</th><th>Badge color</th><th>Preview</th><th>Order</th><th>Active</th><th>Devices using</th><th></th></tr></thead>
+        <tbody>
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+            var s = Model.Items[i];
+            <tr>
+                <td>
+                    <input type="hidden" name="Items[@i].Id" value="@s.Id" />
+                    <input type="text" name="Items[@i].Name" value="@s.Name" style="width:160px;" />
+                </td>
+                <td>
+                    <select name="Items[@i].BadgeClass">
+                        @foreach (var c in colorOptions)
+                        {
+                            <option value="@c" selected="@(s.BadgeClass == c)">@ColorLabel(c)</option>
+                        }
+                    </select>
+                </td>
+                <td><span class="@(s.BadgeClass ?? "badge")">@s.Name</span></td>
+                <td><input type="number" name="Items[@i].DisplayOrder" value="@s.DisplayOrder" style="width:80px;" /></td>
+                <td>
+                    <select name="Items[@i].IsActive">
+                        <option value="true" selected="@s.IsActive">Active</option>
+                        <option value="false" selected="@(!s.IsActive)">Hidden</option>
+                    </select>
+                </td>
+                <td>@(Model.UsageCount.GetValueOrDefault(s.Id))</td>
+                <td>
+                    <button type="submit" name="DeleteId" value="@s.Id" class="danger"
+                            onclick="return confirm('Delete &quot;@s.Name&quot;? Pending edits will also be saved.');">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Items.Count > 0)
+    {
+        <div class="actions">
+            <button type="submit">Save changes</button>
+        </div>
+    }
+</form>

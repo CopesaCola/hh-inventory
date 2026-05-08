@@ -1,0 +1,75 @@
+@page
+@model Inventory.Web.Pages.Import.HopeHealthModel
+@{
+    ViewData["Title"] = "HH Workbook Import";
+}
+
+<h1>Hope Health Workbook Import</h1>
+
+<div class="card">
+    <p>Upload <strong>HH IT Inventory.xlsx</strong>. Each worksheet is processed:</p>
+    <ul>
+        <li>Per-site sheets → sheet name becomes the Site</li>
+        <li>Aggregate sheets (<code>IT Master</code>, <code>New 2024</code>, <code>New 2025</code>, <code>Remote</code>) use their <em>Location</em> column for Site</li>
+        <li><code>IT Cage (In-House)</code> imported as devices at the IT Cage site</li>
+        <li><code>IT Cage Master</code> and <code>South Inventory</code> are skipped</li>
+    </ul>
+    <p class="muted">Devices are matched by Serial Number, falling back to Asset Tag — duplicates update, they don't insert.</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card">
+    <label>Workbook (.xlsx)</label>
+    <input type="file" name="Upload" accept=".xlsx" required />
+
+    <label style="margin-top:0.8rem;">
+        <input type="checkbox" asp-for="DryRun" /> Dry run — analyze and report counts but do not write to the database
+    </label>
+    <label>
+        <input type="checkbox" asp-for="SkipItMaster" /> Skip the <code>IT Master</code> sheet (use only per-site sheets)
+    </label>
+
+    <div class="actions">
+        <button type="submit">Upload &amp; Process</button>
+    </div>
+</form>
+
+@if (Model.Result is not null)
+{
+    <div class="card">
+        <h3>Result @(Model.WasDryRun ? " (dry run — nothing written)" : "")</h3>
+        <p>
+            <strong>Inserted:</strong> @Model.Result.Inserted &nbsp;
+            <strong>Updated:</strong> @Model.Result.Updated &nbsp;
+            <strong>Skipped:</strong> @Model.Result.Skipped
+        </p>
+
+        <h4>Per sheet</h4>
+        <table>
+            <thead><tr><th>Sheet</th><th>Inserted</th><th>Updated</th><th>Skipped</th></tr></thead>
+            <tbody>
+            @foreach (var (sheet, counts) in Model.Result.PerSheet)
+            {
+                <tr>
+                    <td>@sheet</td>
+                    <td>@counts.Inserted</td>
+                    <td>@counts.Updated</td>
+                    <td>@counts.Skipped</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        @if (Model.Result.Warnings.Count > 0)
+        {
+            <details style="margin-top:1rem;">
+                <summary>@Model.Result.Warnings.Count warning(s)</summary>
+                <ul>
+                    @foreach (var w in Model.Result.Warnings)
+                    {
+                        <li class="muted">@w</li>
+                    }
+                </ul>
+            </details>
+        }
+    </div>
+}

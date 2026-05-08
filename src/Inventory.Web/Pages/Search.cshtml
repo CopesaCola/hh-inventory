@@ -1,0 +1,132 @@
+@page
+@model Inventory.Web.Pages.SearchModel
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Query) ? "Search" : $"Search: {Model.Query}";
+}
+
+<h1>Search</h1>
+
+<form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
+    <label>Query</label>
+    <input type="text" name="q" value="@Model.Query" placeholder="Serial, asset tag, model, name, email, site..." autocomplete="off" autofocus />
+    <div style="margin-top:0.6rem;">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+@if (string.IsNullOrWhiteSpace(Model.Query))
+{
+    <p class="muted">Enter a search term to find devices, users, and sites.</p>
+}
+else if (!Model.HasAnyResults)
+{
+    <p class="muted">No matches for "<strong>@Model.Query</strong>".</p>
+}
+else
+{
+    @if (Model.Devices.Count > 0)
+    {
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Devices (@Model.DeviceTotal)</h3>
+                <a class="button secondary" asp-page="Search" asp-page-handler="ExportDevices" asp-route-q="@Model.Query">Export CSV</a>
+            </div>
+            <table>
+                <thead><tr><th>Type</th><th>Model</th><th>Serial</th><th>Asset Tag</th><th>Assigned To</th><th>Site</th></tr></thead>
+                <tbody>
+                @foreach (var d in Model.Devices)
+                {
+                    <tr data-href="@Url.Page("/Devices/Details", new { id = d.Id })">
+                        <td>@(d.DeviceType?.Name ?? "-")</td>
+                        <td>@d.Model</td>
+                        <td>@d.SerialNumber</td>
+                        <td>@d.AssetTag</td>
+                        <td>
+                            @if (d.AssignedUser is not null)
+                            {
+                                <a asp-page="/Users/Details" asp-route-id="@d.AssignedUserId">@d.AssignedUser.FullName</a>
+                            }
+                            else { <text>-</text> }
+                        </td>
+                        <td>
+                            @if (d.Site is not null)
+                            {
+                                <a asp-page="/Sites/Details" asp-route-id="@d.SiteId">@d.Site.Name</a>
+                            }
+                            else { <text>-</text> }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            @if (Model.DeviceTotal > Model.Devices.Count)
+            {
+                <p class="muted">First @Model.Devices.Count of @Model.DeviceTotal — <a asp-page="/Devices/Index" asp-route-q="@Model.Query">see all in Devices</a>.</p>
+            }
+        </div>
+    }
+
+    @if (Model.Users.Count > 0)
+    {
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Users (@Model.UserTotal)</h3>
+                <a class="button secondary" asp-page="Search" asp-page-handler="ExportUsers" asp-route-q="@Model.Query">Export CSV</a>
+            </div>
+            <table>
+                <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Department</th><th>Site</th><th>Devices</th></tr></thead>
+                <tbody>
+                @foreach (var u in Model.Users)
+                {
+                    <tr data-href="@Url.Page("/Users/Details", new { id = u.Id })">
+                        <td><a asp-page="/Users/Details" asp-route-id="@u.Id">@u.FullName</a></td>
+                        <td>@u.Username</td>
+                        <td>@u.Email</td>
+                        <td>@(u.Department?.Name ?? "-")</td>
+                        <td>
+                            @if (u.Site is not null)
+                            {
+                                <a asp-page="/Sites/Details" asp-route-id="@u.SiteId">@u.Site.Name</a>
+                            }
+                            else { <text>-</text> }
+                        </td>
+                        <td>@u.Devices.Count</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            @if (Model.UserTotal > Model.Users.Count)
+            {
+                <p class="muted">First @Model.Users.Count of @Model.UserTotal — <a asp-page="/Users/Index" asp-route-q="@Model.Query">see all in Users</a>.</p>
+            }
+        </div>
+    }
+
+    @if (Model.Sites.Count > 0)
+    {
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Sites (@Model.SiteTotal)</h3>
+                <a class="button secondary" asp-page="Search" asp-page-handler="ExportSites" asp-route-q="@Model.Query">Export CSV</a>
+            </div>
+            <table>
+                <thead><tr><th>Name</th><th>Address</th><th>Users</th><th>Devices</th></tr></thead>
+                <tbody>
+                @foreach (var s in Model.Sites)
+                {
+                    <tr data-href="@Url.Page("/Sites/Details", new { id = s.Id })">
+                        <td><a asp-page="/Sites/Details" asp-route-id="@s.Id">@s.Name</a></td>
+                        <td>@s.Address</td>
+                        <td>@s.Users.Count</td>
+                        <td>@s.Devices.Count</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            @if (Model.SiteTotal > Model.Sites.Count)
+            {
+                <p class="muted">First @Model.Sites.Count of @Model.SiteTotal — <a asp-page="/Sites/Index" asp-route-q="@Model.Query">see all in Sites</a>.</p>
+            }
+        </div>
+    }
+}

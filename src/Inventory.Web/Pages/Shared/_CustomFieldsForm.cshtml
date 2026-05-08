@@ -1,0 +1,32 @@
+@using Inventory.Web.Models
+@model (List<CustomFieldDefinition> Defs, Dictionary<string, string?> Values)
+
+@if (Model.Defs.Count > 0)
+{
+    <h3 style="margin-top:1.2rem;">Additional fields</h3>
+    <div class="row-2">
+        @foreach (var def in Model.Defs)
+        {
+            var key = def.Id.ToString();
+            var val = Model.Values.TryGetValue(key, out var v) ? v : null;
+            var inputName = $"CustomFieldValues[{key}]";
+            <div>
+                <label>@def.Name</label>
+                @if (def.FieldType == CustomFieldType.YesNo)
+                {
+                    var isYes = string.Equals(val, "yes", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(val, "true", StringComparison.OrdinalIgnoreCase);
+                    <select name="@inputName">
+                        <option value="" selected="@(string.IsNullOrEmpty(val))">(unset)</option>
+                        <option value="yes" selected="@isYes">Yes</option>
+                        <option value="no" selected="@(!string.IsNullOrEmpty(val) && !isYes)">No</option>
+                    </select>
+                }
+                else
+                {
+                    <input type="text" name="@inputName" value="@val" />
+                }
+            </div>
+        }
+    </div>
+}

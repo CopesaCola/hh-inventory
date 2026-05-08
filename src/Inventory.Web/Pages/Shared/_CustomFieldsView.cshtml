@@ -1,0 +1,22 @@
+@using Inventory.Web.Models
+@model (List<CustomFieldDefinition> Defs, Dictionary<string, string?> Values)
+
+@if (Model.Defs.Count > 0)
+{
+    @foreach (var def in Model.Defs)
+    {
+        var val = Model.Values.TryGetValue(def.Id.ToString(), out var v) ? v : null;
+        string display;
+        if (def.FieldType == CustomFieldType.YesNo)
+        {
+            display = string.IsNullOrEmpty(val) ? "-" :
+                (string.Equals(val, "yes", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(val, "true", StringComparison.OrdinalIgnoreCase) ? "Yes" : "No");
+        }
+        else
+        {
+            display = string.IsNullOrEmpty(val) ? "-" : val;
+        }
+        <div><strong>@def.Name:</strong> @display</div>
+    }
+}

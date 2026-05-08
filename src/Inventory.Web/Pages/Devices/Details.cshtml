@@ -1,0 +1,78 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Devices.DetailsModel
+@inject Inventory.Web.Services.ILabelService L
+@{
+    ViewData["Title"] = "Device Details";
+    var E = Inventory.Web.Models.CustomFieldEntityType.Device;
+}
+
+@if (Model.Device is null)
+{
+    <p>Device not found.</p>
+}
+else
+{
+    <h1>@(Model.Device.SerialNumber ?? Model.Device.AssetTag ?? "Device")</h1>
+    <div class="card">
+        <div class="row-2">
+            <div><strong>@L.Get(E, "DeviceType", "Device Type"):</strong> @(Model.Device.DeviceType?.Name ?? "-") @(Model.Device.RawType is null ? "" : $"({Model.Device.RawType})")</div>
+            <div><strong>@L.Get(E, "Model", "Model"):</strong> @Model.Device.Model</div>
+            <div><strong>@L.Get(E, "SerialNumber", "Serial"):</strong> @(Model.Device.SerialNumber ?? "-")</div>
+            <div><strong>@L.Get(E, "AssetTag", "Asset Tag"):</strong> @(Model.Device.AssetTag ?? "-")</div>
+            <div><strong>@L.Get(E, "Status", "Status"):</strong> @(Model.Device.Status?.Name ?? "-")</div>
+            <div><strong>Removed:</strong> @(Model.Device.RemovedFromInventory ? "Yes" : "No")</div>
+            <div>
+                <strong>@L.Get(E, "AssignedUser", "Assigned User"):</strong>
+                @if (Model.Device.AssignedUser is not null)
+                {
+                    <a asp-page="/Users/Details" asp-route-id="@Model.Device.AssignedUserId">@Model.Device.AssignedUser.FullName</a>
+                }
+                else { <text>-</text> }
+            </div>
+            <div>
+                <strong>@L.Get(E, "Site", "Site"):</strong>
+                @if (Model.Device.Site is not null)
+                {
+                    <a asp-page="/Sites/Details" asp-route-id="@Model.Device.SiteId">@Model.Device.Site.Name</a>
+                }
+                else { <text>-</text> }
+            </div>
+            <div><strong>@L.Get(E, "LocationWithinSite", "Location"):</strong> @(Model.Device.LocationWithinSite ?? "-")</div>
+            <div><strong>@L.Get(E, "WindowsVersion", "Windows Version"):</strong> @(Model.Device.WindowsVersion ?? "-")</div>
+            <div><strong>@L.Get(E, "IsGrantFunded", "Grant or Dept Funded"):</strong> @(Model.Device.IsGrantFunded ? "Yes" : "No")</div>
+            <div><strong>Created:</strong> @Model.Device.CreatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") by @Model.Device.CreatedBy</div>
+            <div><strong>Last Modified:</strong> @Model.Device.LastModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") by @Model.Device.LastModifiedBy</div>
+            <partial name="_CustomFieldsView" model="@((Model.CustomDefs, Model.CustomValues))" />
+        </div>
+        <div class="actions">
+            <a class="button" asp-page="Reassign" asp-route-id="@Model.Device.Id">Reassign</a>
+            <a class="button" asp-page="Edit" asp-route-id="@Model.Device.Id">Edit</a>
+            <a class="button secondary" asp-page="Index">Back</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Audit history</h3>
+        @if (Model.Device.AuditEntries.Count == 0)
+        {
+            <p class="muted">No history.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>When</th><th>Action</th><th>By</th><th>Changes</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.Device.AuditEntries.OrderByDescending(a => a.TimestampUtc))
+                {
+                    <tr>
+                        <td>@a.TimestampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@a.Action</td>
+                        <td>@a.ModifiedBy</td>
+                        <td><code style="font-size:0.8rem;">@a.Changes</code></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+}

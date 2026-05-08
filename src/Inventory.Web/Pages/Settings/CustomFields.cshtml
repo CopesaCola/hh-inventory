@@ -1,0 +1,80 @@
+@page
+@model Inventory.Web.Pages.Settings.CustomFieldsModel
+@{
+    ViewData["Title"] = "Settings — Custom Fields";
+}
+
+<h1>Custom Fields</h1>
+<p><a asp-page="Index">&larr; Back to Settings</a></p>
+<p class="muted">Add fields beyond the built-in ones. They appear at the bottom of Create/Edit/Details for the selected entity.</p>
+
+@if (TempData["Error"] is string err) { <div class="error">@err</div> }
+
+<form method="post" asp-page-handler="Add" class="card">
+    <h3 style="margin-top:0;">Add</h3>
+    <div class="row-2">
+        <div>
+            <label>Applies to</label>
+            <select asp-for="NewEntityType">
+                <option value="@Inventory.Web.Models.CustomFieldEntityType.Device">Device</option>
+                <option value="@Inventory.Web.Models.CustomFieldEntityType.UserProfile">User Profile</option>
+                <option value="@Inventory.Web.Models.CustomFieldEntityType.Site">Site</option>
+            </select>
+        </div>
+        <div>
+            <label>Field Name</label>
+            <input type="text" asp-for="NewName" required />
+        </div>
+        <div>
+            <label>Field Type</label>
+            <select asp-for="NewFieldType">
+                <option value="@Inventory.Web.Models.CustomFieldType.Text">Text</option>
+                <option value="@Inventory.Web.Models.CustomFieldType.YesNo">Yes / No</option>
+            </select>
+        </div>
+    </div>
+    <div class="actions"><button type="submit">Add</button></div>
+</form>
+
+<form method="post" class="card">
+    <table>
+        <thead><tr><th>Applies to</th><th>Name</th><th>Type</th><th>Order</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+            var f = Model.Items[i];
+            <tr>
+                <td>
+                    <input type="hidden" name="Items[@i].Id" value="@f.Id" />
+                    <input type="hidden" name="Items[@i].EntityType" value="@f.EntityType" />
+                    @f.EntityType
+                </td>
+                <td><input type="text" name="Items[@i].Name" value="@f.Name" style="width:220px;" /></td>
+                <td>
+                    <select name="Items[@i].FieldType">
+                        <option value="@Inventory.Web.Models.CustomFieldType.Text" selected="@(f.FieldType == Inventory.Web.Models.CustomFieldType.Text)">Text</option>
+                        <option value="@Inventory.Web.Models.CustomFieldType.YesNo" selected="@(f.FieldType == Inventory.Web.Models.CustomFieldType.YesNo)">Yes / No</option>
+                    </select>
+                </td>
+                <td><input type="number" name="Items[@i].DisplayOrder" value="@f.DisplayOrder" style="width:80px;" /></td>
+                <td>
+                    <select name="Items[@i].IsActive">
+                        <option value="true" selected="@f.IsActive">Active</option>
+                        <option value="false" selected="@(!f.IsActive)">Hidden</option>
+                    </select>
+                </td>
+                <td>
+                    <button type="submit" name="DeleteId" value="@f.Id" class="danger"
+                            onclick="return confirm('Delete &quot;@f.Name&quot;? All values stored for it will also be deleted. Pending edits will also be saved.');">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Items.Count > 0)
+    {
+        <div class="actions">
+            <button type="submit">Save changes</button>
+        </div>
+    }
+</form>

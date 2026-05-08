@@ -1,0 +1,53 @@
+@page
+@model Inventory.Web.Pages.Settings.DeviceTypesModel
+@{
+    ViewData["Title"] = "Settings — Device Types";
+}
+
+<h1>Device Types</h1>
+<p><a asp-page="Index">&larr; Back to Settings</a></p>
+
+@if (TempData["Error"] is string err) { <div class="error">@err</div> }
+
+<form method="post" asp-page-handler="Add" class="card">
+    <h3 style="margin-top:0;">Add</h3>
+    <label>Name</label>
+    <input type="text" asp-for="NewName" required />
+    <div class="actions"><button type="submit">Add</button></div>
+</form>
+
+<form method="post" class="card">
+    <table>
+        <thead><tr><th>Name</th><th>Order</th><th>Active</th><th>Devices using</th><th></th></tr></thead>
+        <tbody>
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+            var t = Model.Items[i];
+            <tr>
+                <td>
+                    <input type="hidden" name="Items[@i].Id" value="@t.Id" />
+                    <input type="text" name="Items[@i].Name" value="@t.Name" style="width:240px;" />
+                </td>
+                <td><input type="number" name="Items[@i].DisplayOrder" value="@t.DisplayOrder" style="width:80px;" /></td>
+                <td>
+                    <select name="Items[@i].IsActive">
+                        <option value="true" selected="@t.IsActive">Active</option>
+                        <option value="false" selected="@(!t.IsActive)">Hidden</option>
+                    </select>
+                </td>
+                <td>@(Model.UsageCount.GetValueOrDefault(t.Id))</td>
+                <td>
+                    <button type="submit" name="DeleteId" value="@t.Id" class="danger"
+                            onclick="return confirm('Delete &quot;@t.Name&quot;? Pending edits will also be saved.');">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Items.Count > 0)
+    {
+        <div class="actions">
+            <button type="submit">Save changes</button>
+        </div>
+    }
+</form>
