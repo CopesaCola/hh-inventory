@@ -28,6 +28,12 @@ else
         <div class="actions">
             <a class="button" asp-page="Edit" asp-route-id="@Model.User.Id">Edit</a>
             <a class="button secondary" asp-page="Index">Back to Users</a>
+            <form method="post" asp-page="Edit" asp-page-handler="Delete" asp-route-id="@Model.User.Id"
+                  style="display:inline; margin-left:auto;"
+                  onsubmit="return confirm('Delete @Model.User.FullName? Devices assigned to them will be unassigned.');">
+                <input type="hidden" name="Input.Id" value="@Model.User.Id" />
+                <button type="submit" class="button danger">Delete</button>
+            </form>
         </div>
     </div>
 
