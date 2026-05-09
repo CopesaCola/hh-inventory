@@ -245,6 +245,18 @@ console.log('[inventory] site.js loaded');
     console.log(`[suggest] ${entityBoxes.length} entity-scoped input(s) wired`);
 })();
 
+// Show/hide the "Grant or Dept name" text input based on the IsGrantFunded
+// select on the Devices Create/Edit forms. Element with [data-grant-toggle]
+// is the select; element with [data-grant-detail] is the wrapper to toggle.
+(function () {
+    const sel = document.querySelector('[data-grant-toggle]');
+    const detail = document.querySelector('[data-grant-detail]');
+    if (!sel || !detail) return;
+    const update = () => { detail.hidden = sel.value !== 'true'; };
+    update();
+    sel.addEventListener('change', update);
+})();
+
 // Filters panel toggle on entity index pages.
 // A button with [data-toggle-filters="<panelId>"] toggles the matching panel's
 // hidden state. If the panel has data-active="true" (server marked any filter

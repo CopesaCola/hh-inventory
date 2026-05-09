@@ -2,15 +2,76 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Dashboard";
+
+    // Bar widths are scaled relative to the largest count in each chart.
+    int statusMax = Model.StatusBreakdown.Count == 0 ? 1 : Model.StatusBreakdown.Max(r => r.Count);
+    int siteMax   = Model.SiteBreakdown.Count   == 0 ? 1 : Model.SiteBreakdown.Max(r => r.Count);
 }
 
 <h1>Inventory</h1>
-<div class="card">
-    <p class="muted">Quick stats</p>
-    <div style="display:flex; gap:2rem; flex-wrap:wrap;">
-        <div><strong>@Model.DeviceCount</strong><div class="muted">Devices</div></div>
-        <div><strong>@Model.UserCount</strong><div class="muted">User Profiles</div></div>
-        <div><strong>@Model.SiteCount</strong><div class="muted">Sites</div></div>
+
+<div class="kpi-grid">
+    <a class="kpi-tile" asp-page="/Devices/Index">
+        <div class="kpi-num">@Model.DeviceCount.ToString("N0")</div>
+        <div class="kpi-label">Devices</div>
+    </a>
+    <a class="kpi-tile alt" asp-page="/Users/Index">
+        <div class="kpi-num">@Model.UserCount.ToString("N0")</div>
+        <div class="kpi-label">User Profiles</div>
+    </a>
+    <a class="kpi-tile alt2" asp-page="/Sites/Index">
+        <div class="kpi-num">@Model.SiteCount.ToString("N0")</div>
+        <div class="kpi-label">Sites</div>
+    </a>
+</div>
+
+<div class="chart-grid">
+    <div class="card">
+        <h3 style="margin-top:0;">Devices by status</h3>
+        @if (Model.StatusBreakdown.Count == 0)
+        {
+            <p class="muted">No devices yet.</p>
+        }
+        else
+        {
+            <div class="bar-chart">
+                @foreach (var row in Model.StatusBreakdown)
+                {
+                    var pct = row.Count * 100 / statusMax;
+                    <div class="bar-row">
+                        <span class="bar-label">@row.Name</span>
+                        <div class="bar-track">
+                            <div class="bar-fill @(row.Tone)" style="width:@(pct)%;"></div>
+                        </div>
+                        <span class="bar-value">@row.Count.ToString("N0")</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0;">Devices by site</h3>
+        @if (Model.SiteBreakdown.Count == 0)
+        {
+            <p class="muted">No devices yet.</p>
+        }
+        else
+        {
+            <div class="bar-chart">
+                @foreach (var row in Model.SiteBreakdown)
+                {
+                    var pct = row.Count * 100 / siteMax;
+                    <div class="bar-row">
+                        <span class="bar-label">@row.Name</span>
+                        <div class="bar-track">
+                            <div class="bar-fill site" style="width:@(pct)%;"></div>
+                        </div>
+                        <span class="bar-value">@row.Count.ToString("N0")</span>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 

@@ -33,6 +33,7 @@ public class CreateModel : PageModel
         [StringLength(200)] public string? LocationWithinSite { get; set; }
         [StringLength(40)] public string? WindowsVersion { get; set; }
         public bool IsGrantFunded { get; set; }
+        [StringLength(200)] public string? GrantOrDeptFund { get; set; }
         public int? AssignedUserId { get; set; }
         public int? SiteId { get; set; }
     }
@@ -80,6 +81,7 @@ public class CreateModel : PageModel
             LocationWithinSite = Input.LocationWithinSite?.Trim(),
             WindowsVersion = Input.WindowsVersion?.Trim(),
             IsGrantFunded = Input.IsGrantFunded,
+            GrantOrDeptFund = Input.IsGrantFunded ? Input.GrantOrDeptFund?.Trim() : null,
             AssignedUserId = Input.AssignedUserId,
             SiteId = Input.SiteId,
             CreatedUtc = now,

@@ -41,6 +41,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
     db.Database.EnsureCreated();
+    await InventoryDbContext.EnsureSchemaAsync(db);
     await InventoryDbContext.SeedDefaultsAsync(db);
 }
 

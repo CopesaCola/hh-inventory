@@ -34,6 +34,7 @@ public class EditModel : PageModel
         [StringLength(200)] public string? LocationWithinSite { get; set; }
         [StringLength(40)] public string? WindowsVersion { get; set; }
         public bool IsGrantFunded { get; set; }
+        [StringLength(200)] public string? GrantOrDeptFund { get; set; }
         public int? AssignedUserId { get; set; }
         public int? SiteId { get; set; }
     }
@@ -66,6 +67,7 @@ public class EditModel : PageModel
             LocationWithinSite = d.LocationWithinSite,
             WindowsVersion = d.WindowsVersion,
             IsGrantFunded = d.IsGrantFunded,
+            GrantOrDeptFund = d.GrantOrDeptFund,
             AssignedUserId = d.AssignedUserId,
             SiteId = d.SiteId,
         };
@@ -103,6 +105,8 @@ public class EditModel : PageModel
         Track(nameof(Device.LocationWithinSite), d.LocationWithinSite, Input.LocationWithinSite);
         Track(nameof(Device.WindowsVersion), d.WindowsVersion, Input.WindowsVersion);
         Track(nameof(Device.IsGrantFunded), d.IsGrantFunded, Input.IsGrantFunded);
+        var newGrantFund = Input.IsGrantFunded ? Input.GrantOrDeptFund?.Trim() : null;
+        Track(nameof(Device.GrantOrDeptFund), d.GrantOrDeptFund, newGrantFund);
         Track(nameof(Device.AssignedUserId), d.AssignedUserId, Input.AssignedUserId);
         Track(nameof(Device.SiteId), d.SiteId, Input.SiteId);
 
@@ -114,6 +118,7 @@ public class EditModel : PageModel
         d.LocationWithinSite = Input.LocationWithinSite?.Trim();
         d.WindowsVersion = Input.WindowsVersion?.Trim();
         d.IsGrantFunded = Input.IsGrantFunded;
+        d.GrantOrDeptFund = newGrantFund;
         d.AssignedUserId = Input.AssignedUserId;
         d.SiteId = Input.SiteId;
         d.LastModifiedUtc = DateTime.UtcNow;

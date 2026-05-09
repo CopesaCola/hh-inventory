@@ -40,6 +40,7 @@ public static class OverridableLabels
             ("LocationWithinSite", "Location Within Site"),
             ("WindowsVersion", "Windows Version"),
             ("IsGrantFunded", "Grant or Dept Funded"),
+            ("GrantOrDeptFund", "Grant or Dept name"),
             ("AssignedUser", "Assigned User"),
             ("Site", "Site"),
         },

@@ -231,6 +231,7 @@ public class HopeHealthImportService
             device.RemovedFromInventory = !string.IsNullOrWhiteSpace(removed);
             device.WindowsVersion = string.IsNullOrWhiteSpace(windowsVersion) ? device.WindowsVersion : windowsVersion.Trim();
             device.IsGrantFunded = !string.IsNullOrWhiteSpace(grant) || device.IsGrantFunded;
+            if (!string.IsNullOrWhiteSpace(grant)) device.GrantOrDeptFund = grant.Trim();
             if (user is not null) device.AssignedUser = user;
             if (site is not null) device.Site = site;
             device.LastModifiedUtc = now;

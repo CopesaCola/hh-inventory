@@ -116,3 +116,47 @@ button:hover, .button:hover { opacity: 0.9; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
 @media (max-width: 700px) { .row-2, .row-3 { grid-template-columns: 1fr; } }
+
+/* Dashboard KPI tiles — three big totals at the top of the home page,
+   each is a clickable link to its respective entity index. */
+.kpi-grid {
+    display: grid; gap: 1rem; margin-bottom: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.kpi-tile {
+    display: block; text-decoration: none; padding: 1.4rem 1.4rem 1.2rem;
+    border-radius: 8px; color: #fff;
+    background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.kpi-tile.alt  { background: linear-gradient(135deg, #0891b2 0%, #155e75 100%); }
+.kpi-tile.alt2 { background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%); }
+.kpi-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+.kpi-num { font-size: 2.4rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi-label { margin-top: 0.4rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.9; }
+
+/* Two-up grid for the status / site breakdown cards. Stacks on narrow screens. */
+.chart-grid { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+/* Horizontal bar chart used for the breakdowns. */
+.bar-chart { display: flex; flex-direction: column; gap: 0.55rem; }
+.bar-row {
+    display: grid; grid-template-columns: minmax(110px, 28%) 1fr 50px;
+    align-items: center; gap: 0.6rem; font-size: 0.9rem;
+}
+.bar-label { color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { height: 14px; background: #eef0f3; border-radius: 999px; overflow: hidden; }
+.bar-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    transition: width 0.4s ease;
+    min-width: 2px; /* so a count of 1 still shows a sliver */
+}
+.bar-fill.spare   { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.bar-fill.repair  { background: linear-gradient(90deg, #fb923c, #c2410c); }
+.bar-fill.retired { background: linear-gradient(90deg, #9ca3af, #4b5563); }
+.bar-fill.lost    { background: linear-gradient(90deg, #f87171, #b91c1c); }
+.bar-fill.site    { background: linear-gradient(90deg, #34d399, #047857); }
+.bar-value { text-align: right; font-variant-numeric: tabular-nums; color: #4b5563; font-weight: 600; }

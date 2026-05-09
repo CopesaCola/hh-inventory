@@ -32,6 +32,9 @@ public class Device
 
     public bool IsGrantFunded { get; set; }
 
+    [StringLength(200)]
+    public string? GrantOrDeptFund { get; set; }
+
     public bool RemovedFromInventory { get; set; }
 
     public int? AssignedUserId { get; set; }

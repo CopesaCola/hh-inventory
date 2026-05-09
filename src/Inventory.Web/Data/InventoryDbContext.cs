@@ -78,6 +78,32 @@ public class InventoryDbContext : DbContext
         b.Entity<FieldLabelOverride>().HasIndex(l => new { l.EntityType, l.FieldKey }).IsUnique();
     }
 
+    /// <summary>
+    /// Add columns introduced after the initial schema. EnsureCreated() only
+    /// creates tables that don't yet exist — it does NOT add new columns to
+    /// existing tables. This helper runs idempotent ALTER TABLE statements so
+    /// the live SQLite database stays in sync without dropping data.
+    /// </summary>
+    public static async Task EnsureSchemaAsync(InventoryDbContext db)
+    {
+        var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
+
+        async Task EnsureColumnAsync(string table, string column, string definition)
+        {
+            using var check = conn.CreateCommand();
+            check.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = '{column}';";
+            var exists = Convert.ToInt32(await check.ExecuteScalarAsync()) > 0;
+            if (exists) return;
+
+            using var alter = conn.CreateCommand();
+            alter.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {definition};";
+            await alter.ExecuteNonQueryAsync();
+        }
+
+        await EnsureColumnAsync("Devices", "GrantOrDeptFund", "TEXT NULL");
+    }
+
     public static async Task SeedDefaultsAsync(InventoryDbContext db)
     {
         if (!await db.DeviceStatusOptions.AnyAsync())

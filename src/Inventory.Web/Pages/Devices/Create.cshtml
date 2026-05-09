@@ -54,10 +54,14 @@
         </div>
         <div>
             <label>@L.Get(E, "IsGrantFunded", "Grant or Dept Funded")</label>
-            <select asp-for="Input.IsGrantFunded">
+            <select asp-for="Input.IsGrantFunded" data-grant-toggle>
                 <option value="false">No</option>
                 <option value="true">Yes</option>
             </select>
+        </div>
+        <div data-grant-detail>
+            <label>@L.Get(E, "GrantOrDeptFund", "Grant or Dept name")</label>
+            <input type="text" asp-for="Input.GrantOrDeptFund" placeholder="e.g. HRSA, Pharmacy, Clinical Trials..." />
         </div>
         <div>
             <label>@L.Get(E, "AssignedUser", "Assigned User")</label>
