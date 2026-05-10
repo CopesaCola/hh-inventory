@@ -7,7 +7,7 @@
 <h1>Devices</h1>
 
 @{
-    var filtersActive = Model.SiteId.HasValue || Model.DeviceTypeId.HasValue || Model.StatusId.HasValue || Model.IncludeRemoved;
+    var filtersActive = Model.SiteId.HasValue || Model.DeviceTypeId.HasValue || Model.StatusId.HasValue;
 }
 <form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
     <div class="search-row">
@@ -53,9 +53,6 @@
                 </select>
             </div>
         </div>
-        <label style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.8rem;">
-            <input type="checkbox" name="IncludeRemoved" value="true" @(Model.IncludeRemoved ? "checked" : "") /> Show removed
-        </label>
     </div>
 </form>
 
@@ -66,8 +63,7 @@
        asp-route-q="@Model.Query"
        asp-route-SiteId="@Model.SiteId"
        asp-route-DeviceTypeId="@Model.DeviceTypeId"
-       asp-route-StatusId="@Model.StatusId"
-       asp-route-IncludeRemoved="@Model.IncludeRemoved">Export CSV</a>
+       asp-route-StatusId="@Model.StatusId">Export CSV</a>
 </div>
 
 @if (Model.Devices.Count == 0)
