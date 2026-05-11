@@ -1,6 +1,6 @@
-# Inventory
+# HH Inventory
 
-Internal IT inventory web app — devices, users, sites, audit history, bulk CSV/XLSX import.
+IT inventory web app — devices, users, sites, audit history, bulk CSV/XLSX import.
 
 - **Stack:** ASP.NET Core 8 (Razor Pages) + EF Core + SQLite
 - **Auth:** Windows Authentication (Negotiate). Microsoft Entra SSO is planned for v2.
