@@ -106,6 +106,7 @@ button:hover, .button:hover { opacity: 0.9; }
 .toolbar { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 1rem; }
 .toolbar input[type=text] { max-width: 320px; }
 .flash { background: #d1fae5; color: #065f46; padding: 0.6rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; }
+.flash.danger { background: #fee2e2; color: #991b1b; }
 .error { color: #b91c1c; font-size: 0.85rem; }
 .muted { color: #6b7280; font-size: 0.85rem; }
 .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; background: #e0e7ff; color: #1e3a8a; }

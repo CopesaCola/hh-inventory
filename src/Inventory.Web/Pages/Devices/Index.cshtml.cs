@@ -24,9 +24,6 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int? StatusId { get; set; }
 
-    [BindProperty(SupportsGet = true)]
-    public bool IncludeRemoved { get; set; }
-
     public List<Device> Devices { get; set; } = new();
     public List<Site> Sites { get; set; } = new();
     public List<DeviceTypeOption> DeviceTypes { get; set; } = new();
@@ -83,7 +80,9 @@ public class IndexModel : PageModel
             .Include(d => d.Status)
             .AsQueryable();
 
-        if (!IncludeRemoved) q = q.Where(d => !d.RemovedFromInventory);
+        // Removed devices are never shown in the index — there's no UI to opt them in.
+        // The flag still exists on the model and is set by the HopeHealth import.
+        q = q.Where(d => !d.RemovedFromInventory);
         if (SiteId is not null) q = q.Where(d => d.SiteId == SiteId);
         if (DeviceTypeId is not null) q = q.Where(d => d.DeviceTypeId == DeviceTypeId);
         if (StatusId is not null) q = q.Where(d => d.StatusId == StatusId);

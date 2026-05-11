@@ -1,0 +1,53 @@
+@page
+@model Inventory.Web.Pages.Settings.DatabaseModel
+@{
+    ViewData["Title"] = "Database";
+}
+
+<h1>Database</h1>
+<p class="muted">
+    Back up the SQLite database before any update that changes the schema, and restore from a
+    backup if you need to roll back. Restore also handles older backups — it applies the
+    current schema (missing tables and columns) to the uploaded file before swapping it in.
+</p>
+
+@if (TempData["Error"] is string err)
+{
+    <div class="flash danger">@err</div>
+}
+
+<div class="card">
+    <h3 style="margin-top:0;">Backup</h3>
+    <p class="muted">Downloads a consistent snapshot of the live database (uses SQLite's <code>VACUUM INTO</code>, so it's safe to run while the app is in use).</p>
+    <p>
+        <strong>Database file:</strong> <code>@Model.DbPath</code><br />
+        <strong>Size:</strong> @Model.DbSizeDisplay
+    </p>
+    <form method="post" asp-page-handler="Backup">
+        <button type="submit" @(Model.DbExists ? "" : "disabled")>Download backup</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Restore from backup</h3>
+    <p class="muted">
+        Uploads a <code>.db</code> file, runs the current schema migrations against it (creating
+        any tables/columns it's missing), then replaces the live database. The previous live file
+        is kept on disk as <code>inventory_replaced_&lt;timestamp&gt;.db</code> so you can recover
+        if needed.
+    </p>
+    <p style="color:#b91c1c; font-weight:600;">
+        Warning: this replaces all current data. Take a fresh backup first if you're not sure.
+    </p>
+    <form method="post" asp-page-handler="Restore" enctype="multipart/form-data">
+        <label>Backup file</label>
+        <input type="file" name="upload" accept=".db,application/x-sqlite3,application/octet-stream" required />
+        <div class="actions">
+            <button type="submit" class="danger"
+                    onclick="return confirm('This will replace the current database. A safety copy of the existing file will be kept. Continue?');">
+                Restore database
+            </button>
+            <a class="button secondary" asp-page="Index">Cancel</a>
+        </div>
+    </form>
+</div>
