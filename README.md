@@ -1,6 +1,6 @@
-# Inventory
+# HH Inventory
 
-Internal IT inventory web app for Hope Health — devices, user profiles, sites, audit history, bulk CSV/XLSX import, plus a small dashboard and global search.
+Internal IT inventory web app — devices, user profiles, sites, audit history, bulk CSV/XLSX import, plus a small dashboard and global search.
 
 - **Stack:** ASP.NET Core 8 (Razor Pages) + EF Core + SQLite. Excel parsing via ClosedXML.
 - **Auth:** Windows Authentication (Negotiate). Microsoft Entra SSO is planned for v2.
