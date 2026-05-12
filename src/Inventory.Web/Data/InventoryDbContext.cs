@@ -17,6 +17,7 @@ public class InventoryDbContext : DbContext
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
     public DbSet<FieldLabelOverride> FieldLabelOverrides => Set<FieldLabelOverride>();
+    public DbSet<LdapSettings> LdapSettings => Set<LdapSettings>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -79,10 +80,11 @@ public class InventoryDbContext : DbContext
     }
 
     /// <summary>
-    /// Add columns introduced after the initial schema. EnsureCreated() only
-    /// creates tables that don't yet exist — it does NOT add new columns to
-    /// existing tables. This helper runs idempotent ALTER TABLE statements so
-    /// the live SQLite database stays in sync without dropping data.
+    /// Apply schema changes introduced after the initial database was created.
+    /// EnsureCreated() only adds tables when NO tables exist, so on an upgraded
+    /// database neither new columns nor whole new tables get picked up. This
+    /// helper runs idempotent DDL (gated by pragma_table_info / sqlite_master)
+    /// so the live database catches up without losing data.
     /// </summary>
     public static async Task EnsureSchemaAsync(InventoryDbContext db)
     {
@@ -101,7 +103,43 @@ public class InventoryDbContext : DbContext
             await alter.ExecuteNonQueryAsync();
         }
 
+        async Task EnsureTableAsync(string table, string createDdl)
+        {
+            using var check = conn.CreateCommand();
+            check.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=$name;";
+            var p = check.CreateParameter(); p.ParameterName = "$name"; p.Value = table;
+            check.Parameters.Add(p);
+            var exists = Convert.ToInt32(await check.ExecuteScalarAsync()) > 0;
+            if (exists) return;
+
+            using var create = conn.CreateCommand();
+            create.CommandText = createDdl;
+            await create.ExecuteNonQueryAsync();
+        }
+
         await EnsureColumnAsync("Devices", "GrantOrDeptFund", "TEXT NULL");
+
+        // LDAP / Active Directory integration. Singleton table; Id is always 1.
+        await EnsureTableAsync("LdapSettings", @"
+            CREATE TABLE ""LdapSettings"" (
+                ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_LdapSettings"" PRIMARY KEY,
+                ""IsEnabled"" INTEGER NOT NULL DEFAULT 0,
+                ""Server"" TEXT NULL,
+                ""Port"" INTEGER NOT NULL DEFAULT 389,
+                ""UseSsl"" INTEGER NOT NULL DEFAULT 0,
+                ""BindDn"" TEXT NULL,
+                ""BindPasswordEncrypted"" BLOB NULL,
+                ""BaseDn"" TEXT NULL,
+                ""UserFilter"" TEXT NULL,
+                ""FullNameAttribute"" TEXT NOT NULL DEFAULT 'displayName',
+                ""UsernameAttribute"" TEXT NOT NULL DEFAULT 'sAMAccountName',
+                ""EmailAttribute"" TEXT NOT NULL DEFAULT 'mail',
+                ""DepartmentAttribute"" TEXT NOT NULL DEFAULT 'department',
+                ""LastTestUtc"" TEXT NULL,
+                ""LastTestMessage"" TEXT NULL,
+                ""LastSyncUtc"" TEXT NULL,
+                ""LastSyncMessage"" TEXT NULL
+            );");
     }
 
     public static async Task SeedDefaultsAsync(InventoryDbContext db)
@@ -125,6 +163,13 @@ public class InventoryDbContext : DbContext
             {
                 db.DeviceTypeOptions.Add(new DeviceTypeOption { Name = defaults[i], DisplayOrder = i * 10 });
             }
+        }
+
+        // LdapSettings is a singleton (Id = 1). Inserting an empty default row keeps
+        // GetOrCreateAsync simple — no nullable handling at the call site.
+        if (!await db.LdapSettings.AnyAsync())
+        {
+            db.LdapSettings.Add(new LdapSettings());
         }
 
         await db.SaveChangesAsync();

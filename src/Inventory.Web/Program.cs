@@ -26,6 +26,7 @@ builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<HopeHealthImportService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<CustomFieldService>();
+builder.Services.AddScoped<LdapDirectoryService>();
 
 builder.Services.AddRazorPages();
 

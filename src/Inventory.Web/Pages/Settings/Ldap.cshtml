@@ -1,0 +1,113 @@
+@page
+@model Inventory.Web.Pages.Settings.LdapModel
+@{
+    ViewData["Title"] = "LDAP / Active Directory";
+}
+
+<h1>LDAP / Active Directory</h1>
+<p class="muted">
+    Sync user profiles from your directory. Save the connection details, click <strong>Test</strong>
+    to confirm the bind and filter work, then click <strong>Sync users now</strong> to import
+    matching accounts as <code>UserProfile</code> rows. Sync only inserts and updates — it never
+    deletes existing rows.
+</p>
+
+@if (TempData["Error"] is string err)
+{
+    <div class="flash danger">@err</div>
+}
+
+@if (Model.LastTestUtc is not null || Model.LastSyncUtc is not null)
+{
+    <div class="card">
+        @if (Model.LastTestUtc is not null)
+        {
+            <div><strong>Last test:</strong> @Model.LastTestUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") — @Model.LastTestMessage</div>
+        }
+        @if (Model.LastSyncUtc is not null)
+        {
+            <div><strong>Last sync:</strong> @Model.LastSyncUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") — @Model.LastSyncMessage</div>
+        }
+    </div>
+}
+
+<form method="post" class="card" autocomplete="off">
+    <h3 style="margin-top:0;">Connection</h3>
+
+    <label style="display:inline-flex; align-items:center; gap:0.4rem; margin-bottom:0.4rem;">
+        <input type="checkbox" asp-for="Input.IsEnabled" /> Enable LDAP integration
+    </label>
+    <p class="muted" style="margin-top:0;">When unchecked, the Sync button is blocked. Save and Test still work so you can troubleshoot before enabling.</p>
+
+    <div class="row-3">
+        <div>
+            <label>Server</label>
+            <input type="text" asp-for="Input.Server" placeholder="dc01.example.local" />
+        </div>
+        <div>
+            <label>Port</label>
+            <input type="number" asp-for="Input.Port" min="1" max="65535" />
+        </div>
+        <div>
+            <label style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:1.6rem;">
+                <input type="checkbox" asp-for="Input.UseSsl" /> Use SSL (LDAPS)
+            </label>
+        </div>
+    </div>
+
+    <label>Bind DN <span class="muted">(blank = use the app's Windows identity via Negotiate)</span></label>
+    <input type="text" asp-for="Input.BindDn" placeholder="CN=svc-inventory,OU=Service Accounts,DC=example,DC=local" />
+
+    <label>
+        Bind password
+        @if (Model.HasStoredPassword)
+        {
+            <span class="muted">(a password is stored — leave blank to keep it, or type a new one to overwrite)</span>
+        }
+    </label>
+    <input type="password" asp-for="NewPassword" autocomplete="new-password"
+           placeholder="@(Model.HasStoredPassword ? "•••••••• (stored)" : "")" />
+
+    <h3>Search scope</h3>
+
+    <label>Base DN</label>
+    <input type="text" asp-for="Input.BaseDn" placeholder="OU=Users,DC=example,DC=local" />
+
+    <label>User filter <span class="muted">(LDAP filter syntax)</span></label>
+    <input type="text" asp-for="Input.UserFilter" />
+
+    <h3>Attribute mapping</h3>
+    <p class="muted">Defaults are the standard Active Directory names. Adjust for OpenLDAP / FreeIPA / etc.</p>
+    <div class="row-2">
+        <div>
+            <label>Full name attribute</label>
+            <input type="text" asp-for="Input.FullNameAttribute" />
+        </div>
+        <div>
+            <label>Username attribute</label>
+            <input type="text" asp-for="Input.UsernameAttribute" />
+        </div>
+        <div>
+            <label>Email attribute</label>
+            <input type="text" asp-for="Input.EmailAttribute" />
+        </div>
+        <div>
+            <label>Department attribute</label>
+            <input type="text" asp-for="Input.DepartmentAttribute" />
+        </div>
+    </div>
+    <p class="muted">
+        Sync matches existing users by <strong>Username</strong> (case-insensitive). Departments are matched
+        by name against the <a asp-page="Departments">Departments</a> list; values not found there are left blank.
+    </p>
+
+    <div class="actions">
+        <button type="submit" asp-page-handler="Save">Save</button>
+        <button type="submit" asp-page-handler="Test" class="secondary">Test connection</button>
+        <button type="submit" asp-page-handler="Sync" class="secondary"
+                onclick="return confirm('Pull users from the directory into UserProfile? Existing users will be updated, new ones added. Nothing will be deleted.');">
+            Sync users now
+        </button>
+        <a class="button secondary" asp-page="Index" style="margin-left:auto;">Back to Settings</a>
+    </div>
+</form>
