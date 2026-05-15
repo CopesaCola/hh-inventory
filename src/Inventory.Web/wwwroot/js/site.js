@@ -166,21 +166,24 @@ console.log('[inventory] site.js loaded');
         }
 
         function render(data, q) {
-            const includeD = scope === 'all' || scope === 'devices';
-            const includeU = scope === 'all' || scope === 'users';
-            const includeS = scope === 'all' || scope === 'sites';
+            const includeD  = scope === 'all' || scope === 'devices';
+            const includeU  = scope === 'all' || scope === 'users';
+            const includeS  = scope === 'all' || scope === 'sites';
+            const includeSu = scope === 'all' || scope === 'suites';
             const total =
-                (includeD ? (data.devices?.length || 0) : 0) +
-                (includeU ? (data.users?.length   || 0) : 0) +
-                (includeS ? (data.sites?.length   || 0) : 0);
+                (includeD  ? (data.devices?.length || 0) : 0) +
+                (includeU  ? (data.users?.length   || 0) : 0) +
+                (includeS  ? (data.sites?.length   || 0) : 0) +
+                (includeSu ? (data.suites?.length  || 0) : 0);
 
             if (total === 0) {
                 dropdown.innerHTML = `<div class="suggest-empty">No matches for "${escapeHtml(q)}"</div>`;
             } else {
                 let html = '';
-                if (includeD) html += section('Devices', data.devices, it => `/Devices/Details/${it.id}`);
-                if (includeU) html += section('Users',   data.users,   it => `/Users/Details/${it.id}`);
-                if (includeS) html += section('Sites',   data.sites,   it => `/Sites/Details/${it.id}`);
+                if (includeD)  html += section('Devices', data.devices, it => `/Devices/Details/${it.id}`);
+                if (includeU)  html += section('Users',   data.users,   it => `/Users/Details/${it.id}`);
+                if (includeSu) html += section('Suites',  data.suites,  it => `/Suites/Details/${it.id}`);
+                if (includeS)  html += section('Sites',   data.sites,   it => `/Sites/Details/${it.id}`);
                 if (showSeeAll) {
                     html += `<a class="suggest-all" href="/Search?q=${encodeURIComponent(q)}">See all results &rarr;</a>`;
                 }
@@ -255,6 +258,30 @@ console.log('[inventory] site.js loaded');
     const update = () => { detail.hidden = sel.value !== 'true'; };
     update();
     sel.addEventListener('change', update);
+})();
+
+// Filter the Suite dropdown on User Create/Edit by the currently-selected Site.
+// Suite <option> elements carry data-site-id; we hide the ones that don't match.
+// If the currently-selected suite belongs to a different site, the select is
+// reset to "(none)" so the server doesn't receive a mismatched pair.
+(function () {
+    const site  = document.querySelector('[data-site-select]');
+    const suite = document.querySelector('[data-suite-select]');
+    if (!site || !suite) return;
+
+    const update = () => {
+        const siteId = site.value;
+        let selectionStillValid = false;
+        for (const opt of suite.options) {
+            if (!opt.value) { opt.hidden = false; continue; } // keep "(none)"
+            const matches = !siteId || opt.dataset.siteId === siteId;
+            opt.hidden = !matches;
+            if (opt.selected && matches) selectionStillValid = true;
+        }
+        if (!selectionStillValid && suite.value) suite.value = '';
+    };
+    update();
+    site.addEventListener('change', update);
 })();
 
 // Filters panel toggle on entity index pages.

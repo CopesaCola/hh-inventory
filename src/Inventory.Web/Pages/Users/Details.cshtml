@@ -24,6 +24,14 @@ else
                 }
                 else { <text>-</text> }
             </div>
+            <div>
+                <strong>Suite:</strong>
+                @if (Model.User.Suite is not null)
+                {
+                    <a asp-page="/Suites/Details" asp-route-id="@Model.User.SuiteId">@Model.User.Suite.FullName</a>
+                }
+                else { <text>-</text> }
+            </div>
         </div>
         <div class="actions">
             <a class="button" asp-page="Edit" asp-route-id="@Model.User.Id">Edit</a>

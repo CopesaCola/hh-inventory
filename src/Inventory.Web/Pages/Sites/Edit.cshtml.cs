@@ -16,7 +16,6 @@ public class EditModel : PageModel
     {
         public int Id { get; set; }
         [Required, StringLength(120)] public string Name { get; set; } = "";
-        [StringLength(300)] public string? Address { get; set; }
     }
 
     [BindProperty]
@@ -26,7 +25,7 @@ public class EditModel : PageModel
     {
         var s = await _db.Sites.FindAsync(id);
         if (s is null) return NotFound();
-        Input = new InputModel { Id = s.Id, Name = s.Name, Address = s.Address };
+        Input = new InputModel { Id = s.Id, Name = s.Name };
         return Page();
     }
 
@@ -43,7 +42,6 @@ public class EditModel : PageModel
         }
 
         s.Name = Input.Name.Trim();
-        s.Address = Input.Address?.Trim();
         await _db.SaveChangesAsync();
         TempData["Message"] = $"Site {s.Name} updated.";
         return RedirectToPage("Index");

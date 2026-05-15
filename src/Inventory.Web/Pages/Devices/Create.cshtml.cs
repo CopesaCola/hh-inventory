@@ -30,12 +30,12 @@ public class CreateModel : PageModel
         [StringLength(200)] public string? SerialNumber { get; set; }
         [StringLength(120)] public string? AssetTag { get; set; }
         public int? StatusId { get; set; }
-        [StringLength(200)] public string? LocationWithinSite { get; set; }
         [StringLength(40)] public string? WindowsVersion { get; set; }
         public bool IsGrantFunded { get; set; }
         [StringLength(200)] public string? GrantOrDeptFund { get; set; }
         public int? AssignedUserId { get; set; }
         public int? SiteId { get; set; }
+        public int? SuiteId { get; set; }
     }
 
     [BindProperty]
@@ -46,16 +46,18 @@ public class CreateModel : PageModel
 
     public string? AssignedUserName { get; set; }
     public List<Site> Sites { get; set; } = new();
+    public List<UserProfile> Suites { get; set; } = new();
     public List<DeviceTypeOption> DeviceTypes { get; set; } = new();
     public List<DeviceStatusOption> Statuses { get; set; } = new();
     public List<CustomFieldDefinition> CustomDefs { get; set; } = new();
     public Dictionary<string, string?> CustomValues { get; set; } = new();
 
-    public async Task OnGetAsync(int? userId = null, int? siteId = null)
+    public async Task OnGetAsync(int? userId = null, int? siteId = null, int? suiteId = null)
     {
         await LoadLookupsAsync();
         if (userId is not null) Input.AssignedUserId = userId;
         if (siteId is not null) Input.SiteId = siteId;
+        if (suiteId is not null) Input.SuiteId = suiteId;
         Input.StatusId ??= Statuses.FirstOrDefault()?.Id;
     }
 
@@ -70,6 +72,12 @@ public class CreateModel : PageModel
             return Page();
         }
 
+        // Reconcile Suite ↔ Site. A suite belongs to a site; if the form is in a
+        // weird state (suite from a different site, or suite chosen with no site),
+        // silently fix it rather than rejecting — the JS dropdown filter usually
+        // prevents this from being reachable.
+        var (siteId, suiteId) = ReconcileSiteAndSuite(Input.SiteId, Input.SuiteId);
+
         var now = DateTime.UtcNow;
         var device = new Device
         {
@@ -78,12 +86,12 @@ public class CreateModel : PageModel
             SerialNumber = Input.SerialNumber?.Trim(),
             AssetTag = Input.AssetTag?.Trim(),
             StatusId = Input.StatusId,
-            LocationWithinSite = Input.LocationWithinSite?.Trim(),
             WindowsVersion = Input.WindowsVersion?.Trim(),
             IsGrantFunded = Input.IsGrantFunded,
             GrantOrDeptFund = Input.IsGrantFunded ? Input.GrantOrDeptFund?.Trim() : null,
             AssignedUserId = Input.AssignedUserId,
-            SiteId = Input.SiteId,
+            SiteId = siteId,
+            SuiteId = suiteId,
             CreatedUtc = now,
             CreatedBy = _user.Name,
             LastModifiedUtc = now,
@@ -107,6 +115,11 @@ public class CreateModel : PageModel
     private async Task LoadLookupsAsync()
     {
         Sites = await _db.Sites.OrderBy(s => s.Name).ToListAsync();
+        Suites = await _db.UserProfiles
+            .Where(u => u.Kind == UserKind.Suite)
+            .Include(u => u.Site)
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
         DeviceTypes = await _db.DeviceTypeOptions.Where(t => t.IsActive).OrderBy(t => t.DisplayOrder).ThenBy(t => t.Name).ToListAsync();
         Statuses = await _db.DeviceStatusOptions.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name).ToListAsync();
         CustomDefs = await _custom.GetActiveDefinitionsAsync(CustomFieldEntityType.Device);
@@ -119,5 +132,21 @@ public class CreateModel : PageModel
                 .Select(u => u.FullName)
                 .FirstOrDefaultAsync();
         }
+    }
+
+    /// <summary>
+    /// If a Suite was chosen, make sure it lives at the chosen Site:
+    ///  - SuiteId not in our loaded list → drop it (no such suite)
+    ///  - SuiteId set, SiteId null     → auto-fill SiteId from the suite
+    ///  - SuiteId set, mismatched site → drop SuiteId (Site wins)
+    /// </summary>
+    private (int? siteId, int? suiteId) ReconcileSiteAndSuite(int? siteId, int? suiteId)
+    {
+        if (suiteId is null) return (siteId, null);
+        var suite = Suites.FirstOrDefault(s => s.Id == suiteId);
+        if (suite is null) return (siteId, null);
+        if (siteId is null) return (suite.SiteId, suite.Id);
+        if (suite.SiteId != siteId) return (siteId, null);
+        return (siteId, suiteId);
     }
 }

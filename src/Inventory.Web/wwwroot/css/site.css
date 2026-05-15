@@ -118,6 +118,34 @@ button:hover, .button:hover { opacity: 0.9; }
 .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
 @media (max-width: 700px) { .row-2, .row-3 { grid-template-columns: 1fr; } }
 
+/* Collapsible card sections. Native <details>/<summary>; chevron rotates
+   on expand, default disclosure triangle hidden. Used on Site Details to
+   keep the page from scrolling for days when a site has many users/devices. */
+details.card-collapsible { padding: 0; }
+details.card-collapsible > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.9rem 1.2rem;
+    display: flex; align-items: center; gap: 0.55rem;
+    font-size: 1.05rem; font-weight: 600;
+    user-select: none;
+}
+details.card-collapsible > summary::-webkit-details-marker { display: none; }
+details.card-collapsible > summary::before {
+    content: "\25B8"; /* ▸ */
+    color: #6b7280;
+    transition: transform 0.15s ease;
+    width: 0.7rem; flex-shrink: 0;
+}
+details.card-collapsible[open] > summary::before { transform: rotate(90deg); }
+details.card-collapsible > summary:hover { background: #f8fafc; }
+details.card-collapsible > .card-body {
+    padding: 0 1.2rem 1.1rem;
+    border-top: 1px solid #eef0f3;
+    padding-top: 0.9rem;
+}
+details.card-collapsible > .card-body > .toolbar:first-child { margin-bottom: 0.6rem; }
+
 /* Dashboard KPI tiles — three big totals at the top of the home page,
    each is a clickable link to its respective entity index. */
 .kpi-grid {

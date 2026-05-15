@@ -46,7 +46,9 @@ public class IndexModel : PageModel
 
     private IQueryable<UserProfile> BuildQuery()
     {
+        // Suites are stored as UserProfile rows too; this list only shows actual people.
         var q = _db.UserProfiles
+            .Where(u => u.Kind == UserKind.Person)
             .Include(u => u.Site)
             .Include(u => u.Department)
             .Include(u => u.Devices)

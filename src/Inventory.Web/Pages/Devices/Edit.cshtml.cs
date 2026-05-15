@@ -31,12 +31,12 @@ public class EditModel : PageModel
         [StringLength(200)] public string? SerialNumber { get; set; }
         [StringLength(120)] public string? AssetTag { get; set; }
         public int? StatusId { get; set; }
-        [StringLength(200)] public string? LocationWithinSite { get; set; }
         [StringLength(40)] public string? WindowsVersion { get; set; }
         public bool IsGrantFunded { get; set; }
         [StringLength(200)] public string? GrantOrDeptFund { get; set; }
         public int? AssignedUserId { get; set; }
         public int? SiteId { get; set; }
+        public int? SuiteId { get; set; }
     }
 
     [BindProperty]
@@ -47,6 +47,7 @@ public class EditModel : PageModel
 
     public string? AssignedUserName { get; set; }
     public List<Site> Sites { get; set; } = new();
+    public List<UserProfile> Suites { get; set; } = new();
     public List<DeviceTypeOption> DeviceTypes { get; set; } = new();
     public List<DeviceStatusOption> Statuses { get; set; } = new();
     public List<CustomFieldDefinition> CustomDefs { get; set; } = new();
@@ -64,12 +65,12 @@ public class EditModel : PageModel
             SerialNumber = d.SerialNumber,
             AssetTag = d.AssetTag,
             StatusId = d.StatusId,
-            LocationWithinSite = d.LocationWithinSite,
             WindowsVersion = d.WindowsVersion,
             IsGrantFunded = d.IsGrantFunded,
             GrantOrDeptFund = d.GrantOrDeptFund,
             AssignedUserId = d.AssignedUserId,
             SiteId = d.SiteId,
+            SuiteId = d.SuiteId,
         };
         await LoadLookupsAsync();
         CustomValues = await _custom.GetValuesForAsync(CustomFieldEntityType.Device, d.Id);
@@ -102,25 +103,28 @@ public class EditModel : PageModel
         Track(nameof(Device.SerialNumber), d.SerialNumber, Input.SerialNumber);
         Track(nameof(Device.AssetTag), d.AssetTag, Input.AssetTag);
         Track(nameof(Device.StatusId), d.StatusId, Input.StatusId);
-        Track(nameof(Device.LocationWithinSite), d.LocationWithinSite, Input.LocationWithinSite);
         Track(nameof(Device.WindowsVersion), d.WindowsVersion, Input.WindowsVersion);
         Track(nameof(Device.IsGrantFunded), d.IsGrantFunded, Input.IsGrantFunded);
         var newGrantFund = Input.IsGrantFunded ? Input.GrantOrDeptFund?.Trim() : null;
         Track(nameof(Device.GrantOrDeptFund), d.GrantOrDeptFund, newGrantFund);
         Track(nameof(Device.AssignedUserId), d.AssignedUserId, Input.AssignedUserId);
-        Track(nameof(Device.SiteId), d.SiteId, Input.SiteId);
+        // Drop a Suite that doesn't live at the chosen Site (auto-fill Site
+        // from Suite when no Site was picked). Same reconcile rule as Create.
+        var (siteId, suiteId) = ReconcileSiteAndSuite(Input.SiteId, Input.SuiteId);
+        Track(nameof(Device.SiteId), d.SiteId, siteId);
+        Track(nameof(Device.SuiteId), d.SuiteId, suiteId);
 
         d.DeviceTypeId = Input.DeviceTypeId;
         d.Model = Input.Model.Trim();
         d.SerialNumber = Input.SerialNumber?.Trim();
         d.AssetTag = Input.AssetTag?.Trim();
         d.StatusId = Input.StatusId;
-        d.LocationWithinSite = Input.LocationWithinSite?.Trim();
         d.WindowsVersion = Input.WindowsVersion?.Trim();
         d.IsGrantFunded = Input.IsGrantFunded;
         d.GrantOrDeptFund = newGrantFund;
         d.AssignedUserId = Input.AssignedUserId;
-        d.SiteId = Input.SiteId;
+        d.SiteId = siteId;
+        d.SuiteId = suiteId;
         d.LastModifiedUtc = DateTime.UtcNow;
         d.LastModifiedBy = _user.Name;
 
@@ -148,6 +152,11 @@ public class EditModel : PageModel
     private async Task LoadLookupsAsync()
     {
         Sites = await _db.Sites.OrderBy(s => s.Name).ToListAsync();
+        Suites = await _db.UserProfiles
+            .Where(u => u.Kind == UserKind.Suite)
+            .Include(u => u.Site)
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
         DeviceTypes = await _db.DeviceTypeOptions.Where(t => t.IsActive).OrderBy(t => t.DisplayOrder).ThenBy(t => t.Name).ToListAsync();
         Statuses = await _db.DeviceStatusOptions.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name).ToListAsync();
         CustomDefs = await _custom.GetActiveDefinitionsAsync(CustomFieldEntityType.Device);
@@ -159,5 +168,21 @@ public class EditModel : PageModel
                 .Select(u => u.FullName)
                 .FirstOrDefaultAsync();
         }
+    }
+
+    /// <summary>
+    /// Suite belongs to a site. If form is in a weird state, fix silently:
+    ///  - SuiteId not in our loaded list → drop it
+    ///  - SuiteId set but SiteId null    → fill SiteId from the suite
+    ///  - SuiteId set with mismatched site → drop SuiteId (Site wins)
+    /// </summary>
+    private (int? siteId, int? suiteId) ReconcileSiteAndSuite(int? siteId, int? suiteId)
+    {
+        if (suiteId is null) return (siteId, null);
+        var suite = Suites.FirstOrDefault(s => s.Id == suiteId);
+        if (suite is null) return (siteId, null);
+        if (siteId is null) return (suite.SiteId, suite.Id);
+        if (suite.SiteId != siteId) return (siteId, null);
+        return (siteId, suiteId);
     }
 }

@@ -1,0 +1,33 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Suites.EditModel
+@{
+    ViewData["Title"] = "Edit Suite";
+}
+
+<h1>Edit Suite</h1>
+
+<form method="post" class="card">
+    <input type="hidden" asp-for="Input.Id" />
+    <div asp-validation-summary="All" class="error"></div>
+
+    <label>Name</label>
+    <input type="text" asp-for="Input.Name" />
+    <span asp-validation-for="Input.Name" class="error"></span>
+
+    <label>Site</label>
+    <select asp-for="Input.SiteId">
+        <option value="">(select a site)</option>
+        @foreach (var s in Model.Sites)
+        {
+            <option value="@s.Id">@s.Name</option>
+        }
+    </select>
+    <span asp-validation-for="Input.SiteId" class="error"></span>
+
+    <div class="actions">
+        <button type="submit">Save</button>
+        <a class="button secondary" asp-page="Index">Cancel</a>
+        <button type="submit" asp-page-handler="Delete" formnovalidate class="danger"
+                onclick="return confirm('Delete this suite? Members will be unlinked and any devices assigned to it will be unassigned.');">Delete</button>
+    </div>
+</form>

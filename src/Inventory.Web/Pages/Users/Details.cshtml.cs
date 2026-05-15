@@ -17,6 +17,7 @@ public class DetailsModel : PageModel
         User = await _db.UserProfiles
             .Include(u => u.Site)
             .Include(u => u.Department)
+            .Include(u => u.Suite)
             .Include(u => u.Devices).ThenInclude(d => d.Site)
             .Include(u => u.Devices).ThenInclude(d => d.DeviceType)
             .Include(u => u.Devices).ThenInclude(d => d.Status)

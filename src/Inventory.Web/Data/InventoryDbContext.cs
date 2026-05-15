@@ -51,6 +51,15 @@ public class InventoryDbContext : DbContext
             .HasForeignKey(d => d.StatusId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Device.Suite is a separate optional link to a UserProfile row with
+        // Kind = Suite, used for "located in this sub-area". No inverse navigation
+        // on UserProfile — we query devices by SuiteId on demand. SetNull on
+        // delete so removing a suite leaves devices intact at the site.
+        b.Entity<Device>()
+            .HasOne(d => d.Suite).WithMany()
+            .HasForeignKey(d => d.SuiteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         b.Entity<UserProfile>()
             .HasOne(u => u.Site).WithMany(s => s.Users)
             .HasForeignKey(u => u.SiteId)
@@ -59,6 +68,13 @@ public class InventoryDbContext : DbContext
         b.Entity<UserProfile>()
             .HasOne(u => u.Department).WithMany(d => d.Users)
             .HasForeignKey(u => u.DepartmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Self-referencing FK: a Person can belong to a Suite (also a UserProfile row).
+        // Deleting a Suite orphans its members rather than cascading.
+        b.Entity<UserProfile>()
+            .HasOne(u => u.Suite).WithMany(s => s.Members)
+            .HasForeignKey(u => u.SuiteId)
             .OnDelete(DeleteBehavior.SetNull);
 
         b.Entity<AuditEntry>()
@@ -102,6 +118,14 @@ public class InventoryDbContext : DbContext
         }
 
         await EnsureColumnAsync("Devices", "GrantOrDeptFund", "TEXT NULL");
+
+        // Suites-as-UserProfile: Kind distinguishes Person from Suite; SuiteId is
+        // a self-referencing FK to a Suite row that the Person belongs to.
+        await EnsureColumnAsync("UserProfiles", "Kind", "INTEGER NOT NULL DEFAULT 0");
+        await EnsureColumnAsync("UserProfiles", "SuiteId", "INTEGER NULL");
+
+        // Devices can also be located in a Suite (independent of AssignedUser).
+        await EnsureColumnAsync("Devices", "SuiteId", "INTEGER NULL");
     }
 
     public static async Task SeedDefaultsAsync(InventoryDbContext db)

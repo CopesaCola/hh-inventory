@@ -1,0 +1,95 @@
+@page "{id:int}"
+@model Inventory.Web.Pages.Suites.DetailsModel
+@{
+    ViewData["Title"] = Model.Suite?.FullName ?? "Suite";
+}
+
+@if (Model.Suite is null)
+{
+    <p>Suite not found.</p>
+}
+else
+{
+    <h1>@Model.Suite.FullName <span class="muted" style="font-size:0.8em; font-weight:400;">(suite)</span></h1>
+    <div class="card">
+        <div>
+            <strong>Site:</strong>
+            @if (Model.Suite.Site is not null)
+            {
+                <a asp-page="/Sites/Details" asp-route-id="@Model.Suite.SiteId">@Model.Suite.Site.Name</a>
+            }
+            else { <text>-</text> }
+        </div>
+        <div class="actions">
+            <a class="button" asp-page="Edit" asp-route-id="@Model.Suite.Id">Edit</a>
+            <a class="button secondary" asp-page="Index">Back to Suites</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toolbar" style="margin-bottom:0.5rem;">
+            <h3 style="margin:0;">Members (@Model.Suite.Members.Count)</h3>
+            <a class="button" asp-page="/Users/Create" asp-route-siteId="@Model.Suite.SiteId" asp-route-suiteId="@Model.Suite.Id">+ Add User to Suite</a>
+        </div>
+        @if (Model.Suite.Members.Count == 0)
+        {
+            <p class="muted">No users belong to this suite yet.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Full Name</th><th>Username</th><th>Email</th><th>Devices</th></tr></thead>
+                <tbody>
+                @foreach (var m in Model.Suite.Members.OrderBy(p => p.FullName))
+                {
+                    <tr data-href="@Url.Page("/Users/Details", new { id = m.Id })">
+                        <td>@m.FullName</td>
+                        <td>@m.Username</td>
+                        <td>@m.Email</td>
+                        <td>@m.Devices.Count</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="card">
+        <div class="toolbar" style="margin-bottom:0.5rem;">
+            <h3 style="margin:0;">Devices in this suite (@Model.Devices.Count)</h3>
+            <a class="button" asp-page="/Devices/Create" asp-route-siteId="@Model.Suite.SiteId" asp-route-suiteId="@Model.Suite.Id">+ Add Device</a>
+        </div>
+        @if (Model.Devices.Count == 0)
+        {
+            <p class="muted">No devices are located in this suite yet.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Type</th><th>Model</th><th>Serial</th><th>Asset Tag</th><th>Assigned To</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var d in Model.Devices)
+                    {
+                        <tr data-href="@Url.Page("/Devices/Details", new { id = d.Id })">
+                            <td>@(d.DeviceType?.Name ?? "-")</td>
+                            <td>@d.Model</td>
+                            <td>@d.SerialNumber</td>
+                            <td>@d.AssetTag</td>
+                            <td>
+                                @if (d.AssignedUser is not null)
+                                {
+                                    <a asp-page="/Users/Details" asp-route-id="@d.AssignedUserId">@d.AssignedUser.FullName</a>
+                                }
+                                else { <text>-</text> }
+                            </td>
+                            <td>
+                                <span class="@(d.Status?.BadgeClass ?? "badge")">@(d.Status?.Name ?? "-")</span>
+                                @if (d.RemovedFromInventory) { <span class="badge retired">Removed</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}

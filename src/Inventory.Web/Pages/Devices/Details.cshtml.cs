@@ -25,6 +25,7 @@ public class DetailsModel : PageModel
         Device = await _db.Devices
             .Include(d => d.AssignedUser)
             .Include(d => d.Site)
+            .Include(d => d.Suite)
             .Include(d => d.DeviceType)
             .Include(d => d.Status)
             .Include(d => d.AuditEntries)

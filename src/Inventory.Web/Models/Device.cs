@@ -43,6 +43,14 @@ public class Device
     public int? SiteId { get; set; }
     public Site? Site { get; set; }
 
+    /// <summary>
+    /// Optional sub-location within the site. Points to a UserProfile row with
+    /// Kind = Suite. Independent of AssignedUser — a device can be located in
+    /// a suite while still being assigned to a specific person.
+    /// </summary>
+    public int? SuiteId { get; set; }
+    public UserProfile? Suite { get; set; }
+
     public DateTime CreatedUtc { get; set; }
     [StringLength(150)]
     public string CreatedBy { get; set; } = "";

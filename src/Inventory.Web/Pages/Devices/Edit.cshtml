@@ -44,10 +44,6 @@
             </select>
         </div>
         <div>
-            <label>@L.Get(E, "LocationWithinSite", "Location Within Site")</label>
-            <input type="text" asp-for="Input.LocationWithinSite" />
-        </div>
-        <div>
             <label>@L.Get(E, "WindowsVersion", "Windows Version")</label>
             <input type="text" asp-for="Input.WindowsVersion" />
         </div>
@@ -74,11 +70,21 @@
         </div>
         <div>
             <label>@L.Get(E, "Site", "Site")</label>
-            <select asp-for="Input.SiteId">
+            <select asp-for="Input.SiteId" data-site-select>
                 <option value="">(none)</option>
                 @foreach (var s in Model.Sites)
                 {
                     <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label>Suite <span class="muted">(optional — sub-area within the site)</span></label>
+            <select asp-for="Input.SuiteId" data-suite-select>
+                <option value="">(none)</option>
+                @foreach (var s in Model.Suites)
+                {
+                    <option value="@s.Id" data-site-id="@s.SiteId">@s.FullName @(s.Site is not null ? "— " + s.Site.Name : "")</option>
                 }
             </select>
         </div>

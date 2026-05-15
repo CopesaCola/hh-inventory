@@ -1,0 +1,68 @@
+@page
+@model Inventory.Web.Pages.Suites.IndexModel
+@{
+    ViewData["Title"] = "Suites";
+    var filtersActive = Model.SiteId.HasValue;
+}
+
+<h1>Suites</h1>
+<p class="muted">Sub-areas of a site (rooms, suites, departments) that own devices independently of any specific user.</p>
+
+<form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
+    <div class="search-row">
+        <div class="entity-suggest" data-search-scope="suites">
+            <input type="text" name="q" value="@Model.Query" placeholder="Name or site..." autocomplete="off" />
+        </div>
+        <button type="submit">Search</button>
+        <button type="button" class="button secondary" data-toggle-filters="suitesFilters" aria-expanded="false">Filters</button>
+        <a class="button secondary" asp-page="Index">Reset</a>
+        <span class="muted">@Model.Suites.Count suite(s)</span>
+    </div>
+
+    <div class="filters-panel" id="suitesFilters" data-active="@(filtersActive ? "true" : "false")" hidden>
+        <div>
+            <label>Site</label>
+            <select name="SiteId">
+                <option value="">(any)</option>
+                @foreach (var s in Model.Sites)
+                {
+                    <option value="@s.Id" selected="@(Model.SiteId == s.Id)">@s.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+</form>
+
+<div class="toolbar">
+    <a class="button" asp-page="Create">+ Add Suite</a>
+</div>
+
+@if (Model.Suites.Count == 0)
+{
+    <p class="muted">No suites match. Add one with the button above.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Site</th><th>Members</th><th>Devices</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Suites)
+            {
+                <tr data-href="@Url.Page("Details", new { id = s.Id })">
+                    <td><a asp-page="Details" asp-route-id="@s.Id">@s.FullName</a></td>
+                    <td>
+                        @if (s.Site is not null)
+                        {
+                            <a asp-page="/Sites/Details" asp-route-id="@s.SiteId">@s.Site.Name</a>
+                        }
+                        else { <text>-</text> }
+                    </td>
+                    <td>@s.Members.Count</td>
+                    <td>@s.Devices.Count</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

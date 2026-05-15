@@ -61,27 +61,44 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
+// Combobox source for "Assign device to..." pickers. Returns BOTH Persons and
+// Suites, since a device can be assigned to either. The `site` field doubles as
+// the visible subtitle and includes a "(suite)" hint so it's clear what kind
+// of row is being selected.
 app.MapGet("/api/users/search", async (InventoryDbContext db, string? q) =>
 {
     if (string.IsNullOrWhiteSpace(q)) return Results.Ok(Array.Empty<object>());
     var like = $"%{q.Trim()}%";
-    var users = await db.UserProfiles
+    var rows = await db.UserProfiles
         .Include(u => u.Site)
         .Where(u =>
             EF.Functions.Like(u.FullName, like) ||
             EF.Functions.Like(u.Username ?? "", like) ||
             EF.Functions.Like(u.Email ?? "", like))
-        .OrderBy(u => u.FullName)
+        .OrderBy(u => u.Kind)
+        .ThenBy(u => u.FullName)
         .Take(15)
-        .Select(u => new { id = u.Id, name = u.FullName, site = u.Site != null ? u.Site.Name : null })
+        .Select(u => new
+        {
+            id = u.Id,
+            name = u.FullName,
+            site = (u.Site != null ? u.Site.Name : "")
+                 + (u.Kind == Inventory.Web.Models.UserKind.Suite ? " (suite)" : "")
+        })
         .ToListAsync();
-    return Results.Ok(users);
+    return Results.Ok(rows);
 }).RequireAuthorization();
 
 app.MapGet("/api/search/suggest", async (InventoryDbContext db, string? q) =>
 {
     if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
-        return Results.Ok(new { devices = Array.Empty<object>(), users = Array.Empty<object>(), sites = Array.Empty<object>() });
+        return Results.Ok(new
+        {
+            devices = Array.Empty<object>(),
+            users = Array.Empty<object>(),
+            sites = Array.Empty<object>(),
+            suites = Array.Empty<object>(),
+        });
 
     var like = $"%{q.Trim()}%";
 
@@ -103,7 +120,9 @@ app.MapGet("/api/search/suggest", async (InventoryDbContext db, string? q) =>
         })
         .ToListAsync();
 
+    // Users section: actual people only. Suites get their own section below.
     var users = await db.UserProfiles
+        .Where(u => u.Kind == Inventory.Web.Models.UserKind.Person)
         .Include(u => u.Site)
         .Where(u =>
             EF.Functions.Like(u.FullName, like) ||
@@ -120,13 +139,27 @@ app.MapGet("/api/search/suggest", async (InventoryDbContext db, string? q) =>
         .ToListAsync();
 
     var sites = await db.Sites
-        .Where(s => EF.Functions.Like(s.Name, like) || EF.Functions.Like(s.Address ?? "", like))
+        .Where(s => EF.Functions.Like(s.Name, like))
         .OrderBy(s => s.Name)
         .Take(6)
-        .Select(s => new { id = s.Id, name = s.Name, subtitle = s.Address ?? "" })
+        .Select(s => new { id = s.Id, name = s.Name, subtitle = "" })
         .ToListAsync();
 
-    return Results.Ok(new { devices, users, sites });
+    var suites = await db.UserProfiles
+        .Where(u => u.Kind == Inventory.Web.Models.UserKind.Suite)
+        .Include(u => u.Site)
+        .Where(u => EF.Functions.Like(u.FullName, like))
+        .OrderBy(u => u.FullName)
+        .Take(6)
+        .Select(u => new
+        {
+            id = u.Id,
+            name = u.FullName,
+            subtitle = u.Site != null ? u.Site.Name : "",
+        })
+        .ToListAsync();
+
+    return Results.Ok(new { devices, users, sites, suites });
 }).RequireAuthorization();
 
 app.Run();

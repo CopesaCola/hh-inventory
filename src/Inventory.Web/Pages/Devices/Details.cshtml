@@ -37,6 +37,14 @@ else
                 }
                 else { <text>-</text> }
             </div>
+            <div>
+                <strong>Suite:</strong>
+                @if (Model.Device.Suite is not null)
+                {
+                    <a asp-page="/Suites/Details" asp-route-id="@Model.Device.SuiteId">@Model.Device.Suite.FullName</a>
+                }
+                else { <text>-</text> }
+            </div>
             <div><strong>@L.Get(E, "LocationWithinSite", "Location"):</strong> @(Model.Device.LocationWithinSite ?? "-")</div>
             <div><strong>@L.Get(E, "WindowsVersion", "Windows Version"):</strong> @(Model.Device.WindowsVersion ?? "-")</div>
             <div><strong>@L.Get(E, "IsGrantFunded", "Grant or Dept Funded"):</strong> @(Model.Device.IsGrantFunded ? "Yes" : "No")</div>

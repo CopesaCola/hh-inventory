@@ -110,13 +110,12 @@ else
                 <a class="button secondary" asp-page="Search" asp-page-handler="ExportSites" asp-route-q="@Model.Query">Export CSV</a>
             </div>
             <table>
-                <thead><tr><th>Name</th><th>Address</th><th>Users</th><th>Devices</th></tr></thead>
+                <thead><tr><th>Name</th><th>Users</th><th>Devices</th></tr></thead>
                 <tbody>
                 @foreach (var s in Model.Sites)
                 {
                     <tr data-href="@Url.Page("/Sites/Details", new { id = s.Id })">
                         <td><a asp-page="/Sites/Details" asp-route-id="@s.Id">@s.Name</a></td>
-                        <td>@s.Address</td>
                         <td>@s.Users.Count</td>
                         <td>@s.Devices.Count</td>
                     </tr>
