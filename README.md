@@ -1,4 +1,4 @@
-# HH Inventory
+# Inventory
 
 Internal IT inventory web app — devices, user profiles, sites, audit history, bulk CSV/XLSX import, plus a small dashboard and global search.
 
