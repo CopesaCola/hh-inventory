@@ -28,7 +28,6 @@ public class IndexModel : PageModel
         var rows = sites.Select(s => new
         {
             Name = s.Name,
-            Address = s.Address ?? "",
             UserCount = s.Users.Count,
             DeviceCount = s.Devices.Count,
         });
@@ -48,9 +47,7 @@ public class IndexModel : PageModel
         {
             var term = Query.Trim();
             var like = $"%{term}%";
-            q = q.Where(s =>
-                EF.Functions.Like(s.Name, like) ||
-                EF.Functions.Like(s.Address ?? "", like));
+            q = q.Where(s => EF.Functions.Like(s.Name, like));
         }
         return q;
     }

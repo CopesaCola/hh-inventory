@@ -9,7 +9,7 @@
 <form method="get" class="card" style="padding:0.8rem 1rem;" autocomplete="off">
     <div class="search-row">
         <div class="entity-suggest" data-search-scope="sites">
-            <input type="text" name="q" value="@Model.Query" placeholder="Name or address..." autocomplete="off" />
+            <input type="text" name="q" value="@Model.Query" placeholder="Site name..." autocomplete="off" />
         </div>
         <button type="submit">Search</button>
         <a class="button secondary" asp-page="Index">Reset</a>
@@ -31,13 +31,12 @@
 else
 {
     <table>
-        <thead><tr><th>Name</th><th>Address</th><th>Users</th><th>Devices</th></tr></thead>
+        <thead><tr><th>Name</th><th>Users</th><th>Devices</th></tr></thead>
         <tbody>
         @foreach (var s in Model.Sites)
         {
             <tr data-href="@Url.Page("Details", new { id = s.Id })">
                 <td><a asp-page="Details" asp-route-id="@s.Id">@s.Name</a></td>
-                <td>@s.Address</td>
                 <td>@s.Users.Count</td>
                 <td>@s.Devices.Count</td>
             </tr>

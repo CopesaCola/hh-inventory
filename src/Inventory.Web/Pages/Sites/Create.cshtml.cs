@@ -15,7 +15,6 @@ public class CreateModel : PageModel
     public class InputModel
     {
         [Required, StringLength(120)] public string Name { get; set; } = "";
-        [StringLength(300)] public string? Address { get; set; }
     }
 
     [BindProperty]
@@ -33,7 +32,7 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        var newSite = new Site { Name = Input.Name.Trim(), Address = Input.Address?.Trim() };
+        var newSite = new Site { Name = Input.Name.Trim() };
         _db.Sites.Add(newSite);
         await _db.SaveChangesAsync();
         TempData["Message"] = $"Site {Input.Name} added.";

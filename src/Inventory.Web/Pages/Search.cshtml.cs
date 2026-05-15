@@ -90,7 +90,6 @@ public class SearchModel : PageModel
         var rows = sites.Select(s => new
         {
             Name = s.Name,
-            Address = s.Address ?? "",
             UserCount = s.Users.Count,
             DeviceCount = s.Devices.Count,
         });
@@ -128,9 +127,7 @@ public class SearchModel : PageModel
         var siteQ = _db.Sites
             .Include(s => s.Users)
             .Include(s => s.Devices)
-            .Where(s =>
-                EF.Functions.Like(s.Name, like) ||
-                EF.Functions.Like(s.Address ?? "", like));
+            .Where(s => EF.Functions.Like(s.Name, like));
 
         return (deviceQ, userQ, siteQ);
     }

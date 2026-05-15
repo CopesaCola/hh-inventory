@@ -120,10 +120,10 @@ app.MapGet("/api/search/suggest", async (InventoryDbContext db, string? q) =>
         .ToListAsync();
 
     var sites = await db.Sites
-        .Where(s => EF.Functions.Like(s.Name, like) || EF.Functions.Like(s.Address ?? "", like))
+        .Where(s => EF.Functions.Like(s.Name, like))
         .OrderBy(s => s.Name)
         .Take(6)
-        .Select(s => new { id = s.Id, name = s.Name, subtitle = s.Address ?? "" })
+        .Select(s => new { id = s.Id, name = s.Name, subtitle = "" })
         .ToListAsync();
 
     return Results.Ok(new { devices, users, sites });

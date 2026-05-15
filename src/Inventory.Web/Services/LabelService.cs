@@ -55,7 +55,6 @@ public static class OverridableLabels
         [CustomFieldEntityType.Site] = new (string, string)[]
         {
             ("Name", "Name"),
-            ("Address", "Address"),
         },
     };
 }
